@@ -6,7 +6,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 
 import db from './config/db.js';
-import initializeSocket from './utils/chatSocket.js';
+import setupSocket from './utils/chatSocket.js';
 
 import authRoutes from './routes/authRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
@@ -63,7 +63,7 @@ app.use('/api/institute', instituteRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Initialize Socket.IO handlers
-initializeSocket(io);
+setupSocket(server);
 
 
 // ......................

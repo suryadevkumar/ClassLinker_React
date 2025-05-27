@@ -1,82 +1,67 @@
-import { useState, useEffect, useRef } from 'react';
-import { getChatHistory, getParticipants } from '../services/api';
-import io from 'socket.io-client';
+import { useEffect, useState } from 'react';
+import { getSocket } from '../utils/socket';
+import axios from 'axios';
 
-const socket = io('http://localhost:5000');
-
-export function useChat(subjectId, user) {
+export const useChat = (sub_id, user_id) => {
   const [messages, setMessages] = useState([]);
-  const [participants, setParticipants] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const messagesEndRef = useRef(null);
+  const [typingUsers, setTypingUsers] = useState([]);
+  const socket = getSocket();
 
   useEffect(() => {
-    if (!subjectId || !user) return;
-
-    // Join subject room
-    socket.emit('joinSubject', {
-      subjectId,
-      userId: user.id,
-      userType: user.type
-    });
-
-    // Load initial data
-    const loadData = async () => {
+    const fetchMessages = async () => {
       try {
-        const [historyRes, participantsRes] = await Promise.all([
-          getChatHistory(subjectId),
-          getParticipants(subjectId)
-        ]);
-        
-        setMessages(historyRes.data);
-        setParticipants(participantsRes.data);
+        const res = await axios.get(`/api/chat/messages?sub_id=${sub_id}`);
+        setMessages(res.data);
       } catch (err) {
-        setError(err.response?.data?.error || 'Failed to load chat');
-      } finally {
-        setLoading(false);
+        console.error('Error fetching messages:', err);
       }
     };
 
-    loadData();
+    fetchMessages();
+  }, [sub_id]);
 
-    // Listen for new messages
-    const handleNewMessage = (message) => {
+  useEffect(() => {
+    if (!sub_id) return;
+
+    socket.emit('join_subject', { sub_id, user_id });
+
+    socket.on('new_message', (message) => {
       setMessages(prev => [...prev, message]);
-      scrollToBottom();
-    };
+    });
 
-    socket.on('newMessage', handleNewMessage);
-    socket.on('error', (err) => setError(err));
+    socket.on('typing', ({ user_id: typingId, user_name, isTyping }) => {
+      setTypingUsers(prev => isTyping 
+        ? [...prev.filter(u => u.user_id !== typingId), { user_id: typingId, user_name }]
+        : prev.filter(u => u.user_id !== typingId))
+    });
 
     return () => {
-      socket.off('newMessage', handleNewMessage);
-      socket.off('error');
+      socket.off('new_message');
+      socket.off('typing');
+      socket.emit('leave_subject', { sub_id, user_id });
     };
-  }, [subjectId, user]);
+  }, [sub_id, user_id, socket]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const sendMessage = async (message, user_name, user_type) => {
+    try {
+      const res = await axios.post('/api/chat/send', {
+        user_id,
+        sub_id,
+        message,
+        user_name,
+        user_type
+      });
+      socket.emit('send_message', res.data);
+      return true;
+    } catch (err) {
+      console.error('Error sending message:', err);
+      return false;
+    }
   };
 
-  const sendMessage = (message) => {
-    if (!message.trim()) return;
-    
-    socket.emit('sendMessage', {
-      subjectId,
-      userId: user.id,
-      userName: user.name,
-      userType: user.type,
-      message
-    });
+  const sendTyping = (isTyping, user_name) => {
+    socket.emit('typing', { sub_id, user_id, user_name, isTyping });
   };
 
-  return {
-    messages,
-    participants,
-    loading,
-    error,
-    sendMessage,
-    messagesEndRef
-  };
-}
+  return { messages, typingUsers, sendMessage, sendTyping };
+};

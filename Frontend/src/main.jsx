@@ -18,6 +18,9 @@ import TeacherDashboard from './components/TeacherDashboard';
 import StudentDashboard from './components/StudentDashboard';
 import ClassList from './components/ClassList';
 import SubjectList from './components/SubjectList';
+import { initializeSocket } from './utils/socket'
+
+initializeSocket();
 
 axios.defaults.baseURL = 'http://localhost:3000/api';
 
