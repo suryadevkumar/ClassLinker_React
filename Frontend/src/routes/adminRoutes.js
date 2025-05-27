@@ -1,0 +1,160 @@
+import axios from "axios";
+
+export const getAdminDetails = async () => {
+    try {
+        const response = await axios.get('/admin/getAdminDetails', {
+            withCredentials: true,
+        });
+        return response.data.data;
+    } catch (error) {
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to load admin data',
+        };
+    }
+};
+
+// Department routes
+export const getDepartments = async () => {
+    try {
+        const response = await axios.get('/admin/departments', {
+            withCredentials: true,
+        });
+        return response.data;
+    } catch (error) {
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to load department',
+        };
+    }
+};
+
+// Course routes
+export const getCourses = async (departmentId) => {
+    try {
+        const response = await axios.get('/admin/courses', {
+            params: { departmentId },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error loading courses:", error);
+    }
+};
+
+// Class routes
+export const getClasses = async (courseId) => {
+    try {
+        const response = await axios.get('/admin/classes', {
+            params: { courseId },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error loading classes:", error);
+    }
+};
+
+// Class list with filter
+export const getClassList = async (dep, crs, cls) => {
+    try {
+        const response = await axios.post('/admin/class/list',
+            { dep, crs, cls },
+            {
+                withCredentials: true
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error loading class list:", error);
+        throw error;
+    }
+};
+
+// Class add
+export const addClass = async (formData) => {
+    try {
+        const response = await axios.post('/admin/addClass', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            },
+            withCredentials: true
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error adding class:", error);
+        throw error;
+    }
+};
+
+// subject details
+export const getClassDetails = async (idcc_id) => {
+    try {
+        const response = await axios.post('/admin/class/details', { idcc_id });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching class details:', error);
+    }
+};
+
+// subject list
+export const getSubjectList = async (idcc_id) => {
+    try {
+        const response = await axios.post('/admin/subject/list', { idcc_id });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching subject list:', error);
+    }
+};
+
+// teacher list
+export const getTeacherList = async () => {
+    try {
+        const response = await axios.get('/admin/teacher/list', {
+            withCredentials: true,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching subject list:', error);
+    }
+};
+
+//add subject
+export const addSubject = async (idcc_id, subjectName, teacherId) => {
+    try {
+      const response = await axios.post('/admin/subject', {
+        idcc_id,
+        subjectName,
+        teacherId
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Error adding subject:', error);
+    }
+};
+
+//update subject
+export const updateSubject = async (subject_id, subjectName, teacherId) => {
+    try {
+      const response = await axios.post("admin/subject/update", {
+        subject_id,
+        subjectName,
+        teacherId,
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error("Error updating subject:", error);
+    }
+};
+
+//delete subject
+export const deleteSubject = async (subject_id) => {
+    try {
+      const response = await axios.post('/admin/subject/delete', {
+        subject_id
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting subject:', error);
+    }
+};
