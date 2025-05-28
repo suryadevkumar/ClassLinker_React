@@ -10,7 +10,7 @@ export const useChat = (sub_id, user_id) => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await axios.get(`/api/chat/messages?sub_id=${sub_id}`);
+        const res = await axios.get(`/chat/messages?sub_id=${sub_id}`);
         setMessages(res.data);
       } catch (err) {
         console.error('Error fetching messages:', err);
@@ -44,7 +44,7 @@ export const useChat = (sub_id, user_id) => {
 
   const sendMessage = async (message, user_name, user_type) => {
     try {
-      const res = await axios.post('/api/chat/send', {
+      const res = await axios.post('/chat/send', {
         user_id,
         sub_id,
         message,

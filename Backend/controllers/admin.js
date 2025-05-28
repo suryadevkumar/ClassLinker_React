@@ -67,11 +67,12 @@ export const getAdminDetails = async (req, res) => {
 
 export const getDepartments = async (req, res) => {
     try {
+        const inst_id = req.query.instituteId || req.session.inst_id;
         const result = await db.execute(
             `SELECT DISTINCT dep_id AS id, dep_name AS name 
              FROM class_view 
              WHERE ins_id = :inst_id`,
-            { inst_id: req.session.inst_id }
+            { inst_id }
         );
         res.json(result.rows);
     } catch (err) {

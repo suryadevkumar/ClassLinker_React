@@ -1,4 +1,4 @@
-import db from "../config/db";
+import db from "../config/db.js";
 
 // Get messages for a subject
 export const getMessage= async (req, res) => {

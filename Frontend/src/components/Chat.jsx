@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useChat } from '../hooks/useChat';
+import { useChat } from '../utils/useChat';
 
 const Chat = ({ sub_id, user_id, user_name, user_type }) => {
   const [message, setMessage] = useState('');

@@ -18,7 +18,8 @@ import TeacherDashboard from './components/TeacherDashboard';
 import StudentDashboard from './components/StudentDashboard';
 import ClassList from './components/ClassList';
 import SubjectList from './components/SubjectList';
-import { initializeSocket } from './utils/socket'
+import { initializeSocket } from './utils/socket.js'
+import Chat from './components/Chat';
 
 initializeSocket();
 
@@ -92,6 +93,10 @@ const appRouter = createBrowserRouter([
       {
         path: "/subject",
         element: <SubjectList/>
+      },
+      {
+        path: "/chat",
+        element: <Chat/>
       },
     ]
   }

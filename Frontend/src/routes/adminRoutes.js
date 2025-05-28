@@ -15,9 +15,11 @@ export const getAdminDetails = async () => {
 };
 
 // Department routes
-export const getDepartments = async () => {
+export const getDepartments = async (instituteId) => {
     try {
         const response = await axios.get('/admin/departments', {
+            params: { instituteId }
+        }, {
             withCredentials: true,
         });
         return response.data;
@@ -120,41 +122,41 @@ export const getTeacherList = async () => {
 //add subject
 export const addSubject = async (idcc_id, subjectName, teacherId) => {
     try {
-      const response = await axios.post('/admin/subject', {
-        idcc_id,
-        subjectName,
-        teacherId
-      });
+        const response = await axios.post('/admin/subject', {
+            idcc_id,
+            subjectName,
+            teacherId
+        });
 
-      return response.data;
+        return response.data;
     } catch (error) {
-      console.error('Error adding subject:', error);
+        console.error('Error adding subject:', error);
     }
 };
 
 //update subject
 export const updateSubject = async (subject_id, subjectName, teacherId) => {
     try {
-      const response = await axios.post("admin/subject/update", {
-        subject_id,
-        subjectName,
-        teacherId,
-      });
+        const response = await axios.post("admin/subject/update", {
+            subject_id,
+            subjectName,
+            teacherId,
+        });
 
-      return response.data;
+        return response.data;
     } catch (error) {
-      console.error("Error updating subject:", error);
+        console.error("Error updating subject:", error);
     }
 };
 
 //delete subject
 export const deleteSubject = async (subject_id) => {
     try {
-      const response = await axios.post('/admin/subject/delete', {
-        subject_id
-      });
-      return response.data;
+        const response = await axios.post('/admin/subject/delete', {
+            subject_id
+        });
+        return response.data;
     } catch (error) {
-      console.error('Error deleting subject:', error);
+        console.error('Error deleting subject:', error);
     }
 };

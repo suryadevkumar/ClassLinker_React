@@ -3,7 +3,6 @@ import bodyParser from 'body-parser';
 import session from 'express-session';
 import cors from 'cors';
 import http from 'http';
-import { Server } from 'socket.io';
 
 import db from './config/db.js';
 import setupSocket from './utils/chatSocket.js';
@@ -12,17 +11,10 @@ import authRoutes from './routes/authRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import instituteRoutes from './routes/instituteRoutes.js';
+import studentRoutes from './routes/studentRoutes.js';
 
 const app = express();
 const server = http.createServer(app);
-
-const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"],
-    credentials: true
-  }
-});
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -56,91 +48,19 @@ db.initialize().catch(err => {
   process.exit(1);
 });
 
-// Define routes
+// routes
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/institute', instituteRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/student', studentRoutes);
 
-// Initialize Socket.IO handlers
 setupSocket(server);
 
 
 // ......................
 
 //student signup
-//function to fetch institute list
-
-// app.get('/getInstitute', async (req, res) => {
-//     let connection;
-//     try {
-//         connection = await oracledb.getConnection(dbConfig);
-//         const result = await connection.execute(
-//             `SELECT DISTINCT ins_id AS id, ins_name AS name FROM institute`);
-//         res.json(result.rows);
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).send('Error fetching departments');
-//     } finally {
-//         if (connection) {
-//             try {
-//                 await connection.close();
-//             } catch (err) {
-//                 console.error(err);
-//             }
-//         }
-//     }
-// });
-
-// //function to fetch department
-// app.get('/getDepList', async (req, res) => {
-//     const { instId } = req.query;
-//     let connection;
-//     try {
-//         connection = await oracledb.getConnection(dbConfig);
-//         const result = await connection.execute(
-//             `SELECT DISTINCT dep_id AS id, dep_name AS name FROM class_view WHERE ins_id = :ins_id`,
-//             { ins_id: instId }
-//         );
-//         res.json(result.rows);
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).send('Error fetching courses');
-//     } finally {
-//         if (connection) {
-//             try {
-//                 await connection.close();
-//             } catch (err) {
-//                 console.error(err);
-//             }
-//         }
-//     }
-// });
-
-// //function to fetch class
-// app.get('/getSections', async (req, res) => {
-//     const { clsId } = req.query;
-//     let connection;
-//     try {
-//         connection = await oracledb.getConnection(dbConfig);
-//         const result = await connection.execute(
-//             `SELECT section FROM class_view WHERE cls_id = :cls_id`,
-//             { cls_id: clsId }
-//         );
-//         res.send(`${result.rows[0][0]}`);
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).send('Error fetching classes');
-//     } finally {
-//         if (connection) {
-//             try {
-//                 await connection.close();
-//             } catch (err) {
-//                 console.error(err);
-//             }
-//         }
-//     }
-// });
 
 // //check student email in used or not
 // app.post('/checkStdEmailUsed',async(req,res)=>{
