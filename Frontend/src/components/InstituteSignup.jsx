@@ -87,8 +87,8 @@ const InstituteSignUp = () => {
     const response1 = await checkEmailUsed(insMail);
     const response2 = await checkEmailUsed(adMail);
     console.log(response1, response2);
-    if(response1.success) return toast.error("institute email is in used!");
-    if(response2.success) return toast.error("admin email is in used!");
+    if(response1.success) return toast.error("Institute email is in used!");
+    if(response2.success) return toast.error("Admin email is in used!");
     setCurrentStep(2);
   };
 

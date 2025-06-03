@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
+import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import mail_img from "../assets/img/mail.png";
 import lock_img from "../assets/img/lock.png";
 import otp_img from "../assets/img/otp.png";
 import show_img from "../assets/img/show.png";
 import hide_img from "../assets/img/hide.png";
-import { Link, useNavigate } from 'react-router-dom';
-import { login, sendOtp, verifyOtp } from '../routes/authRoutes';
+import { Link, useNavigate } from "react-router-dom";
+import { login, sendOtp, verifyOtp } from "../routes/authRoutes";
 
 const InstituteLogin = () => {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ const InstituteLogin = () => {
     let interval;
     if (timer > 0) {
       interval = setInterval(() => {
-        setTimer(prevTimer => prevTimer - 1);
+        setTimer((prevTimer) => prevTimer - 1);
       }, 1000);
     }
     return () => clearInterval(interval);
@@ -47,14 +47,14 @@ const InstituteLogin = () => {
       if (response.success) return toast.success(response.message);
       else return toast.error(response.message);
     } else {
-      return toast.error('Incorrect Username or Password');
+      return toast.error("Incorrect Username or Password");
     }
   };
 
   const resendOTP = async () => {
     if (timer > 0) return;
     setTimer(59);
-    
+
     const response = await sendOtp(email);
     if (response.success) {
       toast.success(response.message);
@@ -71,47 +71,79 @@ const InstituteLogin = () => {
       return;
     }
     const response = await verifyOtp(email, OTP);
-    if (response.success){
+    if (response.success) {
       localStorage.removeItem("userType");
-      navigate('/instituteDashboard');
-    } 
-    else return toast.error(response.message);
+      navigate("/instituteDashboard");
+    } else return toast.error(response.message);
   };
 
   return (
     <section className="flex justify-center items-center py-36 bg-gray-100">
       <div className="container w-[400px] mb-3">
         <div className="login-form bg-white p-8 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-4 text-center">Institute Login</h2>
+          <h2 className="text-2xl font-bold mb-4 text-center">
+            Institute Login
+          </h2>
           <form>
             {step === 1 && (
               <div>
                 <div className="login_input flex items-center border border-gray-300 rounded-lg p-2 mb-4">
-                  <img src={mail_img} alt="Email Icon" width="22px" className="mr-2" />
+                  <img
+                    src={mail_img}
+                    alt="Email Icon"
+                    width="22px"
+                    className="mr-2"
+                  />
                   <input
                     required
                     type="email"
                     placeholder="Email"
                     className="input w-full focus:outline-none"
                     value={email}
-                    onChange={(e) => { setEmail(e.target.value) }}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                    }}
                   />
                 </div>
                 <div className="login_input flex items-center border border-gray-300 rounded-lg p-2 mb-4">
-                  <img src={lock_img} alt="Password Icon" width="23px" className="mr-2" />
+                  <img
+                    src={lock_img}
+                    alt="Password Icon"
+                    width="23px"
+                    className="mr-2"
+                  />
                   <input
                     required
                     type={type}
                     placeholder="Your Password"
                     className="input w-full focus:outline-none"
                     value={password}
-                    onChange={(e) => { setPassword(e.target.value) }}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                    }}
                   />
-                  <img src={hideImg} alt="hide_password" width="23px" className="cursor-pointer" onClick={passwordShow} />
+                  <img
+                    src={hideImg}
+                    alt="hide_password"
+                    width="23px"
+                    className="cursor-pointer"
+                    onClick={passwordShow}
+                  />
                 </div>
                 <div className="flex justify-between mb-4">
-                  <Link to="/adminLogin" className="text-blue-500 hover:underline">Admin Login</Link>
-                  <a href="institute-forget-pass.html" className="text-blue-500 hover:underline">Forgot password?</a>
+                  <Link
+                    to="/adminLogin"
+                    className="text-blue-500 hover:underline"
+                  >
+                    Admin Login
+                  </Link>
+                  <Link
+                    to="/resetPassword"
+                    state={{ userType: "Institute" }}
+                    className="text-blue-500 hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
                 <button
                   type="submit"
@@ -121,8 +153,13 @@ const InstituteLogin = () => {
                   Send OTP
                 </button>
                 <p className="text-center mt-4">
-                  Don't have an account?{' '}
-                  <Link to="/instituteSignup" className="text-blue-500 hover:underline">Sign up</Link>
+                  Don't have an account?{" "}
+                  <Link
+                    to="/instituteSignup"
+                    className="text-blue-500 hover:underline"
+                  >
+                    Sign up
+                  </Link>
                 </p>
               </div>
             )}
@@ -131,14 +168,21 @@ const InstituteLogin = () => {
               <div>
                 <label className="block mb-2">Enter Your OTP:</label>
                 <div className="login_input flex items-center border border-gray-300 rounded-lg p-2 mb-4">
-                  <img src={otp_img} alt="OTP Icon" width="23px" className="mr-2" />
+                  <img
+                    src={otp_img}
+                    alt="OTP Icon"
+                    width="23px"
+                    className="mr-2"
+                  />
                   <input
                     required
                     type="text"
                     placeholder="Your OTP"
                     className="input w-full focus:outline-none"
                     value={OTP}
-                    onChange={(e) => { setOTP(e.target.value) }}
+                    onChange={(e) => {
+                      setOTP(e.target.value);
+                    }}
                   />
                 </div>
                 <div className="flex gap-2 mb-4">
@@ -163,7 +207,12 @@ const InstituteLogin = () => {
                   </button>
                 </div>
                 <p className="text-center mt-4">
-                  <Link to="/adminLogin" className="text-blue-500 hover:underline">Admin Login</Link>
+                  <Link
+                    to="/adminLogin"
+                    className="text-blue-500 hover:underline"
+                  >
+                    Admin Login
+                  </Link>
                 </p>
               </div>
             )}

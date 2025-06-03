@@ -58,7 +58,8 @@ const InstituteDashboard = () => {
 
         <div className="menu flex items-center bg-white p-4 rounded-lg shadow-md mb-4">
           <img src={changePass} alt="change_password" className="w-20 h-20 mr-6" />
-          <h2 className="text-lg font-semibold">Change Password</h2>
+          <Link to="/changePassword"
+                  state={{ userType: "Institute" }} className="text-lg font-semibold hover:underline">Change Password</Link>
         </div>
 
         <div className="menu flex items-center bg-white p-4 rounded-lg shadow-md mb-4">

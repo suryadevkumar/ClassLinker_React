@@ -62,69 +62,6 @@ setupSocket(server);
 
 //student signup
 
-// //check student email in used or not
-// app.post('/checkStdEmailUsed',async(req,res)=>{
-//     const{stdMail}=req.body;
-//     let connection;
-//     try{
-//         connection=await oracledb.getConnection(dbConfig);
-//         const result=await connection.execute(`SELECT COUNT(std_id) FROM student WHERE std_email=:email`,{email:stdMail});
-//         const count = result.rows[0][0];
-//         if(count>0)
-//             res.send('yes');
-//         else
-//             res.send('good');
-//     }
-//     catch(err){
-//         console.log(err);
-//     }
-//     finally{
-//         if(connection)
-//         {
-//             try{
-//                 connection.close();
-//             }
-//             catch(err)
-//             {
-//                 console.error(err);
-//             }
-//         }
-            
-//     }
-// })
-
-// //send otp to stdent email
-// app.post('/sendStdEmail', (req, res) => {
-//     let { email } = req.body;
-//     otp1=generateOTP();
-//     const mailOptions = {
-//         from: 'suryadevkumar786786@gmail.com',
-//         to: email,
-//         subject: 'ClassLinker Email Verification',
-//         text: `Welcome to ClassLinker!
-//         your OTP is ${otp1}`
-//     };
-
-//     transporter.sendMail(mailOptions, (error, info) => {
-//         if (error) {
-//             console.error('Error:', error);
-//             return res.send('Error sending email. Try again later.');
-//         } else {
-//             console.log('Email sent:', info.response);
-//             return res.send('OTP Sent Successfully!');
-//         }
-//     });
-// });
-
-// //verify student otp
-// app.post('/verifyOTP3',(req,res)=>{
-//     const {stdOTP}=req.body;
-//     if(stdOTP==otp1)
-//         res.send('true');
-//     else
-//     res.send('false');
-// })
-
 // //student signup function
 // app.post('/studentSignup', upload.fields([{ name: 'photo' }, { name: 'receipt' }]), async (req, res) => {
 //     const { stdName, stdDob, scholarId, stdMob, stdMail, college, department, course, cls, section, pass } = req.body;
@@ -276,68 +213,6 @@ setupSocket(server);
 // });
 
 // //teacher function
-// //check teacher email in used or not
-// app.post('/checkTchEmailUsed',async(req,res)=>{
-//     const{tchMail}=req.body;
-//     let connection;
-//     try{
-//         connection=await oracledb.getConnection(dbConfig);
-//         const result=await connection.execute(`SELECT COUNT(tch_id) FROM teacher WHERE tch_email=:email`,{email:tchMail});
-//         const count = result.rows[0][0];
-//         if(count>0)
-//             res.send('yes');
-//         else
-//             res.send('good');
-//     }
-//     catch(err){
-//         console.log(err);
-//     }
-//     finally{
-//         if(connection)
-//         {
-//             try{
-//                 connection.close();
-//             }
-//             catch(err)
-//             {
-//                 console.error(err);
-//             }
-//         }
-            
-//     }
-// });
-
-// //send otp to teacher email
-// app.post('/sendTchEmail', (req, res) => {
-//     let { email } = req.body;
-//     otp2=generateOTP();
-//     const mailOptions = {
-//         from: 'suryadevkumar786786@gmail.com',
-//         to: email,
-//         subject: 'ClassLinker Email Verification',
-//         text: `Welcome to ClassLinker!
-//         your OTP is ${otp2}`
-//     };
-
-//     transporter.sendMail(mailOptions, (error, info) => {
-//         if (error) {
-//             console.error('Error:', error);
-//             return res.send('Error sending email. Try again later.');
-//         } else {
-//             console.log('Email sent:', info.response);
-//             return res.send('OTP Sent Successfully!');
-//         }
-//     });
-// });
-
-// //verify teacher otp
-// app.post('/verifyOTP4',(req,res)=>{
-//     const {tchOTP}=req.body;
-//     if(tchOTP==otp2)
-//         res.send('true');
-//     else
-//     res.send('false');
-// })
 
 // //teacher signup function
 // app.post('/teacherSignup',upload.single('photo'), async(req,res)=>{

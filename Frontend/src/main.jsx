@@ -20,6 +20,8 @@ import ClassList from './components/ClassList';
 import SubjectList from './components/SubjectList';
 import { initializeSocket } from './utils/socket.js'
 import Chat from './components/Chat';
+import ResetPassword from './components/ResetPassword.jsx';
+import ChangePassword from './components/ChangePassword.jsx';
 
 initializeSocket();
 
@@ -65,6 +67,14 @@ const appRouter = createBrowserRouter([
       {
         path: "/adminLogin",
         element: <LoginCard login_type="Admin"/>
+      },
+      {
+        path: "/resetPassword",
+        element: <ResetPassword/>
+      },
+      {
+        path: "/changePassword",
+        element: <ChangePassword/>
       },
       {
         path: "/instituteLogin",

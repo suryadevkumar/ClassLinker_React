@@ -70,6 +70,23 @@ export const login = async (userType, email, password) => {
     }
 };
 
+export const updatePassword = async (userType, email, pass) =>{
+    try {
+        const response = await axios.post('/auth/updatePassword', { userType, email, pass }, {
+            withCredentials: true,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        return response.data;
+    } catch (error) {
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Failed to reset Password',
+        };
+    }
+}
+
 export const checkSession = async () => {
   try {
     const response = await axios.get('/auth/check-session', {

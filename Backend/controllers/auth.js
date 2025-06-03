@@ -104,26 +104,26 @@ export const verifyOtp = async (req, res) => {
 
 // User type configuration
 const USER_TYPES = {
-    student: { 
-        table: 'STUDENT', 
-        emailCol: 'STD_EMAIL', 
+    student: {
+        table: 'STUDENT',
+        emailCol: 'STD_EMAIL',
         passCol: 'STD_PASS',
         sessionKey: 'studentMail'
     },
-    teacher: { 
-        table: 'TEACHER', 
-        emailCol: 'TCH_EMAIL', 
+    teacher: {
+        table: 'TEACHER',
+        emailCol: 'TCH_EMAIL',
         passCol: 'TCH_PASS',
         sessionKey: 'teacherMail'
     },
-    institute: { 
-        table: 'INSTITUTE', 
-        emailCol: 'INS_EMAIL', 
+    institute: {
+        table: 'INSTITUTE',
+        emailCol: 'INS_EMAIL',
         passCol: 'INS_PASS',
         sessionKey: 'instituteMail'
     },
-    admin: { 
-        table: 'INSTITUTE', 
+    admin: {
+        table: 'INSTITUTE',
         emailCol: 'AD_EMAIL',
         passCol: 'INS_PASS',
         sessionKey: 'adminMail'
@@ -131,18 +131,21 @@ const USER_TYPES = {
 };
 
 export const loginUser = async (req, res) => {
-    const { userType, email, password } = req.body;
-    
+    let { userType, email, password } = req.body;
+
     // Validate userType
     if (!USER_TYPES[userType]) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'Invalid userType' 
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid userType'
         });
     }
 
     const { table, emailCol, passCol, sessionKey } = USER_TYPES[userType];
 
+    if(!email) email = req.session[sessionKey];
+    console.log(email, userType, password);
+    
     try {
         // Use your existing db.execute function
         const result = await db.execute(
@@ -151,9 +154,9 @@ export const loginUser = async (req, res) => {
         );
 
         if (result.rows.length === 0) {
-            return res.json({ 
-                success: false, 
-                message: 'User not found' 
+            return res.json({
+                success: false,
+                message: 'User not found'
             });
         }
 
@@ -161,9 +164,9 @@ export const loginUser = async (req, res) => {
         const isMatch = await bcrypt.compare(password, hashedPassword);
 
         if (!isMatch) {
-            return res.json({ 
-                success: false, 
-                message: 'Incorrect password' 
+            return res.json({
+                success: false,
+                message: 'Incorrect password'
             });
         }
 
@@ -172,7 +175,7 @@ export const loginUser = async (req, res) => {
         req.session.userType = userType;
         console.log("Session after login:", req.session);
 
-        return res.json({ 
+        return res.json({
             success: true,
             userType: userType,
             email: email
@@ -180,66 +183,114 @@ export const loginUser = async (req, res) => {
 
     } catch (err) {
         console.error('Login error:', err);
-        return res.status(500).json({ 
-            success: false, 
-            message: 'Server error' 
+        return res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+};
+
+export const updatePassword = async (req, res) => {
+    const { userType, email, pass } = req.body;
+
+    // Validate required fields
+    if (!userType || !pass) {
+        return res.status(400).send("User type and password are required.");
+    }
+
+    // Get user type configuration
+    const userConfig = USER_TYPES[userType.toLowerCase()];
+    if (!userConfig) {
+        return res.status(400).send("Invalid user type.");
+    }
+
+    // Determine email - from body or session
+    let userEmail = email;
+
+    if (!userEmail && req.session[userConfig.sessionKey]) {
+        userEmail = req.session[userConfig.sessionKey];
+    }
+    if (!userEmail) {
+        return res.status(400).send("Email is required.");
+    }
+
+    try {
+        // Hash the password
+        const hashPass = await bcrypt.hash(pass, 10);
+
+        // Update password in the appropriate table
+        await db.execute(
+            `UPDATE ${userConfig.table} SET ${userConfig.passCol} = :hashPass WHERE ${userConfig.emailCol} = :userEmail`,
+            { hashPass, userEmail },
+            { autoCommit: true }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: 'Password reset successfully',
+        });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            success: false,
+            message: '"Error during password update."',
         });
     }
 };
 
 // session check
 export const checkSession = async (req, res) => {
-  const userTypes = ['student', 'teacher', 'institute', 'admin'];
-  
-  for (const userType of userTypes) {
-    const { sessionKey } = USER_TYPES[userType];
-    if (req.session[sessionKey]) {
-      return res.json({ 
-        success: true,
-        userType: userType,
-        email: req.session[sessionKey]
-      });
+    const userTypes = ['student', 'teacher', 'institute', 'admin'];
+
+    for (const userType of userTypes) {
+        const { sessionKey } = USER_TYPES[userType];
+        if (req.session[sessionKey]) {
+            return res.json({
+                success: true,
+                userType: userType,
+                email: req.session[sessionKey]
+            });
+        }
     }
-  }
-  
-  return res.json({ 
-    success: false,
-    message: 'No active session'
-  });
+
+    return res.json({
+        success: false,
+        message: 'No active session'
+    });
 };
 
 // logout
 export const logout = async (req, res) => {
-  try {
-    // Get session ID before destruction (for logging if needed)
-    const sessionId = req.sessionID;
-    
-    req.session.destroy(err => {
-      if (err) {
-        console.error(`Failed to destroy session ${sessionId}:`, err);
-        return res.status(500).json({ 
-          success: false, 
-          message: 'Logout failed' 
+    try {
+        // Get session ID before destruction (for logging if needed)
+        const sessionId = req.sessionID;
+
+        req.session.destroy(err => {
+            if (err) {
+                console.error(`Failed to destroy session ${sessionId}:`, err);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Logout failed'
+                });
+            }
+
+            // Clear the session cookie with same options used in session config
+            res.clearCookie('connect.sid', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                path: '/'
+            });
+
+            return res.json({
+                success: true,
+                message: 'Logged out successfully'
+            });
         });
-      }
-      
-      // Clear the session cookie with same options used in session config
-      res.clearCookie('connect.sid', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        path: '/'
-      });
-      
-      return res.json({ 
-        success: true, 
-        message: 'Logged out successfully' 
-      });
-    });
-  } catch (error) {
-    console.error('Unexpected logout error:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Unexpected logout error' 
-    });
-  }
+    } catch (error) {
+        console.error('Unexpected logout error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Unexpected logout error'
+        });
+    }
 };
