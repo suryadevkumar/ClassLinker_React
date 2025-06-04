@@ -19,7 +19,7 @@ const LoginCard = ({ login_type }) => {
     setType(type === "password" ? "text" : "password");
     setHideImg(type === "password" ? show_img : hide_img);
   };
-  
+
   const UserLogin = async (e) => {
     if (!email || !password) return;
     e.preventDefault();
@@ -115,7 +115,7 @@ const LoginCard = ({ login_type }) => {
               <p className="text-center mt-4">
                 Don't have an account?{" "}
                 <Link
-                  to="/studentSignup"
+                  to={`/${login_type.toLowerCase()}Signup`}
                   className="text-blue-500 hover:underline"
                 >
                   Sign up

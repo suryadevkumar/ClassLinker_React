@@ -18,8 +18,7 @@ export const getAdminDetails = async () => {
 export const getDepartments = async (instituteId) => {
     try {
         const response = await axios.get('/admin/departments', {
-            params: { instituteId }
-        }, {
+            params: { instituteId },
             withCredentials: true,
         });
         return response.data;
@@ -158,5 +157,21 @@ export const deleteSubject = async (subject_id) => {
         return response.data;
     } catch (error) {
         console.error('Error deleting subject:', error);
+    }
+};
+
+//student list
+export const getStudentList = async (dep, crs, cls) => {
+    try {
+        const response = await axios.post('/admin/student/list',
+            { dep, crs, cls },
+            {
+                withCredentials: true
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("Error loading class list:", error);
+        throw error;
     }
 };

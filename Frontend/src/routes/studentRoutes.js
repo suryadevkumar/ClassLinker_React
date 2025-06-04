@@ -22,3 +22,18 @@ export const getSections = async (clsId) => {
         console.error("Error loading courses:", error);
     }
 };
+
+export const studentSignup = async (formData) => {
+    try {
+        console.log([...formData.entries()]);
+        const response = await axios.post('/student/signup', formData, {
+            withCredentials: true,
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        console.log(response)
+        return response.data;
+    } catch (error) {
+        console.error("Signup error:", error);
+        console.log("Server says:", error.response?.data); // Add this!
+    }
+}

@@ -3,6 +3,8 @@ import bodyParser from 'body-parser';
 import session from 'express-session';
 import cors from 'cors';
 import http from 'http';
+import FileStore from 'session-file-store';
+
 
 import db from './config/db.js';
 import setupSocket from './utils/chatSocket.js';
@@ -15,6 +17,7 @@ import studentRoutes from './routes/studentRoutes.js';
 
 const app = express();
 const server = http.createServer(app);
+const fileStore = FileStore(session);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -29,12 +32,17 @@ app.use(session({
   secret: 'your-secret-key',
   resave: false,
   saveUninitialized: false,
-  cookie: { 
+  store: new fileStore({
+    path: './sessions', // Folder to save session files
+    ttl: 3 * 24 * 60 * 60,
+  }),
+  cookie: {
     maxAge: 3 * 24 * 60 * 60 * 1000,
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production'
   }
 }));
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {

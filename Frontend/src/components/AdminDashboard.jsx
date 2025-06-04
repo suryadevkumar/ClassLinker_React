@@ -12,14 +12,12 @@ const AdminDashboard = () => {
   const [adminData, setAdminData] = useState({});
   
   useEffect(()=>{
-    getAdminDetail();
-  },[])
-
-  const getAdminDetail=async()=>{
+    const getAdminDetail=async()=>{
     const response = await getAdminDetails();
-    console.log(response);
     setAdminData(response);
   }
+    getAdminDetail();
+  },[])
 
   return (
     <div className="flex flex-col lg:flex-row bg-gray-100">
@@ -34,9 +32,9 @@ const AdminDashboard = () => {
       <div className="flex flex-wrap justify-around w-full items-center">
         <div className="w-56 h-40 p-2 m-5 bg-white text-center rounded-lg">
           <h2 className="mb-3 text-lg font-bold">Student</h2>
-          <a href="studentList.html">
+          <Link to="/student">
             <img src={student_img} alt="Student" className="h-3/5 mx-auto" />
-          </a>
+          </Link>
         </div>
         <div className="w-56 h-40 p-2 m-5 bg-white text-center rounded-lg">
           <h2 className="mb-3 text-lg font-bold">Teacher</h2>

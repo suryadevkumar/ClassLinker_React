@@ -22,6 +22,7 @@ import { initializeSocket } from './utils/socket.js'
 import Chat from './components/Chat';
 import ResetPassword from './components/ResetPassword.jsx';
 import ChangePassword from './components/ChangePassword.jsx';
+import StudentList from './components/StudentList.jsx';
 
 initializeSocket();
 
@@ -107,6 +108,10 @@ const appRouter = createBrowserRouter([
       {
         path: "/chat",
         element: <Chat/>
+      },
+      {
+        path: "/student",
+        element: <StudentList/>
       },
     ]
   }

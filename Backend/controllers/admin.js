@@ -67,7 +67,11 @@ export const getAdminDetails = async (req, res) => {
 
 export const getDepartments = async (req, res) => {
     try {
+        console.log('Session:', req.session); // Debug entire session
+        console.log('Query params:', req.query); // Debug query params
+        
         const inst_id = req.query.instituteId || req.session.inst_id;
+        console.log('Final inst_id:', inst_id);
         const result = await db.execute(
             `SELECT DISTINCT dep_id AS id, dep_name AS name 
              FROM class_view 
@@ -376,7 +380,7 @@ export const getStudentList = async (req, res) => {
              AND dep_id = :dep 
              AND crs_id = :crs 
              AND cls_id = :cls 
-             AND verified = 1
+             AND verified = 'Unverified'
              ORDER BY sch_id ASC`,
             { 
                 ins_id: req.session.inst_id,

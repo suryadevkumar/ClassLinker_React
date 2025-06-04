@@ -144,7 +144,6 @@ export const loginUser = async (req, res) => {
     const { table, emailCol, passCol, sessionKey } = USER_TYPES[userType];
 
     if(!email) email = req.session[sessionKey];
-    console.log(email, userType, password);
     
     try {
         // Use your existing db.execute function
@@ -173,7 +172,6 @@ export const loginUser = async (req, res) => {
         // Set session
         req.session[sessionKey] = email;
         req.session.userType = userType;
-        console.log("Session after login:", req.session);
 
         return res.json({
             success: true,

@@ -49,10 +49,15 @@ const ClassList = () => {
       if (!selectedDepartment) {
         setCourses([]);
         setSelectedCourse("");
+        setClasses([]);
+        setSelectedClass("");
         return;
       }
       const response = await getCourses(selectedDepartment);
       setCourses(response);
+      setSelectedCourse("");
+      setClasses([]);
+      setSelectedClass("");
     };
     fetchCourses();
   }, [selectedDepartment]);
@@ -67,6 +72,7 @@ const ClassList = () => {
       }
       const response = await getClasses(selectedCourse);
       setClasses(response);
+      setSelectedClass("");
     };
     fetchClasses();
   }, [selectedCourse]);
