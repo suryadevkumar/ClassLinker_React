@@ -175,3 +175,32 @@ export const getStudentList = async (dep, crs, cls) => {
         throw error;
     }
 };
+
+// Get detailed student information
+export const getStudentDetails = async (studentId) => {
+    try {
+        const response = await axios.get('/admin/student/details', {
+            params: { studentId },
+        });
+        return response.data.data;
+    } catch (error) {
+        console.error("Error fetching student details:", error);
+        throw error;
+    }
+};
+
+// Update student details
+export const updateStudentDetails = async (formDataToSend) => {
+    try {
+        const response = await axios.put('/admin/student/update', formDataToSend, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            },
+                withCredentials: true
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error updating student:", error);
+        throw error;
+    }
+};

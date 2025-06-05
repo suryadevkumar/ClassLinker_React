@@ -1,9 +1,13 @@
 import express from 'express';
-import { getAdminDetails, getDepartments, getCourses, getClasses, addClass,
+import {
+    getAdminDetails, getDepartments, getCourses, getClasses, addClass,
     getClassList, getClassDetails, getSubjectList,
     addSubject, updateSubject, deleteSubject,
     getStudentList, getTeacherList, getUnverifiedTeachers,
-    getUnverifiedStudents, verifyTeacher, verifyStudent } from '../controllers/admin.js';
+    getUnverifiedStudents, verifyTeacher, verifyStudent,
+    getStudentDetails,
+    updateStudent
+} from '../controllers/admin.js';
 import upload from '../utils/uploadMiddleware.js';
 
 const router = express.Router();
@@ -26,6 +30,8 @@ router.post('/subject/delete', deleteSubject);
 
 // User management
 router.post('/student/list', getStudentList);
+router.get('/student/details', getStudentDetails);
+router.put('/student/update', upload.fields([{ name: 'STD_PIC', maxCount: 1 }, { name: 'STD_DOC', maxCount: 1 }]), updateStudent);
 router.get('/teacher/list', getTeacherList);
 router.get('/teacher/unverified', getUnverifiedTeachers);
 router.get('/student/unverified', getUnverifiedStudents);

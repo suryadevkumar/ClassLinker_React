@@ -1,5 +1,5 @@
 import { useState,useEffect } from "react"
-import { api, jpgImg } from "../config/config.js"
+import { jpgImg } from "../config/config.js"
 import student_img from "../assets/img/student.png"
 import teacher_img from "../assets/img/teacher.png"
 import request_img from "../assets/img/request.png"

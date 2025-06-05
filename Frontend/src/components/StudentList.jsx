@@ -6,6 +6,7 @@ import {
   getDepartments,
   getStudentList,
 } from "../routes/adminRoutes";
+import StudentDetails from "./StudentDetails";
 
 const StudentList = () => {
   const [departments, setDepartments] = useState([]);
@@ -18,6 +19,7 @@ const StudentList = () => {
   const [selectedClass, setSelectedClass] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
 
   // Load departments on component mount
   useEffect(() => {
@@ -89,7 +91,10 @@ const StudentList = () => {
     } else {
       const filtered = students.filter(
         (student) =>
-          student[0].toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+          student[0]
+            .toString()
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
           student[1].toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredStudents(filtered);
@@ -118,6 +123,42 @@ const StudentList = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewStudent = (studentId) => {
+    setSelectedStudentId(studentId);
+  };
+
+  const handleStudentUpdate = (updatedStudent) => {
+    setStudents(
+      students.map((s) =>
+        s[0] === updatedStudent.STD_ID
+          ? [
+              updatedStudent.STD_ID,
+              updatedStudent.STD_NAME,
+              updatedStudent.DEPT_NAME || s[2],
+              updatedStudent.COURSE_NAME || s[3],
+              s[4],
+            ]
+          : s
+      )
+    );
+
+    setFilteredStudents(
+      filteredStudents.map((s) =>
+        s[0] === updatedStudent.STD_ID
+          ? [
+              updatedStudent.STD_ID,
+              updatedStudent.STD_NAME,
+              updatedStudent.DEPT_NAME || s[2],
+              updatedStudent.COURSE_NAME || s[3],
+              s[4],
+            ]
+          : s
+      )
+    );
+
+    setSelectedStudentId(null);
   };
 
   return (
@@ -220,9 +261,7 @@ const StudentList = () => {
         {students.length > 0 && (
           <div className="bg-white rounded-lg shadow-md p-6 animate-fade-in">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">
-                Student List
-              </h2>
+              <h2 className="text-2xl font-bold text-gray-800">Student List</h2>
               <div className="mt-4 md:mt-0">
                 <input
                   type="text"
@@ -267,9 +306,6 @@ const StudentList = () => {
                     {filteredStudents.map((student, index) => (
                       <tr key={index} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {student[0]}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {student[1]}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -282,7 +318,13 @@ const StudentList = () => {
                           {student[4]}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <button className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                          {student[5]}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <button
+                            onClick={() => handleViewStudent(student[0])}
+                            className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                          >
                             View
                           </button>
                         </td>
@@ -293,6 +335,14 @@ const StudentList = () => {
               </div>
             )}
           </div>
+        )}
+
+        {selectedStudentId && (
+          <StudentDetails
+            studentId={selectedStudentId}
+            onClose={() => setSelectedStudentId(null)}
+            onUpdate={handleStudentUpdate}
+          />
         )}
       </div>
     </div>

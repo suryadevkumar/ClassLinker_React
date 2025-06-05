@@ -67,11 +67,8 @@ export const getAdminDetails = async (req, res) => {
 
 export const getDepartments = async (req, res) => {
     try {
-        console.log('Session:', req.session); // Debug entire session
-        console.log('Query params:', req.query); // Debug query params
         
         const inst_id = req.query.instituteId || req.session.inst_id;
-        console.log('Final inst_id:', inst_id);
         const result = await db.execute(
             `SELECT DISTINCT dep_id AS id, dep_name AS name 
              FROM class_view 
@@ -374,7 +371,7 @@ export const deleteSubject = async (req, res) => {
 export const getStudentList = async (req, res) => {
     try {
         const result = await db.execute(
-            `SELECT DISTINCT sch_id, std_name, dep_name, crs_name, cls_name 
+            `SELECT DISTINCT std_id, sch_id, std_name, dep_name, crs_name, cls_name 
              FROM student_view 
              WHERE ins_id = :ins_id 
              AND dep_id = :dep 
@@ -394,6 +391,165 @@ export const getStudentList = async (req, res) => {
         console.error(err);
         res.status(500).json({ error: 'Error fetching student list' });
     }
+};
+
+export const getStudentDetails = async (req, res) => {
+    try {
+        const { studentId } = req.query;
+
+        const studentQuery = `
+            SELECT
+                std_id,
+                sch_id, 
+                std_name, 
+                TO_CHAR(std_dob, 'YYYY-MM-DD'),
+                std_mobile,
+                std_email,
+                verified,
+                section,
+                ins_id,
+                ins_name,
+                idcc_id,
+                dep_id,
+                dep_name,
+                crs_id,
+                crs_name,
+                cls_id,
+                cls_name,
+                std_pic,
+                std_doc
+            FROM student_view 
+            WHERE std_id = :studentId
+        `;
+
+        const studentResult = await db.execute(studentQuery, { studentId });
+
+        if (!studentResult.rows || studentResult.rows.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Student not found' 
+            });
+        }
+
+        const [STD_ID, SCH_ID, STD_NAME, STD_DOB, STD_MOBILE, STD_EMAIL, VERIFIED, SECTION,
+            INS_ID, INS_NAME, IDCC_ID, DEP_ID, DEP_NAME, CRS_ID, CRS_NAME, CLS_ID, CLS_NAME, STD_PIC, STD_DOC
+        ] = studentResult.rows[0];
+
+        let stdPicBase64 = null;
+        let stdDocBase64 = null;
+
+        if (STD_PIC) {
+            stdPicBase64 = await handleLob(STD_PIC);
+        }
+
+        if (STD_DOC) {
+            stdDocBase64 = await handleLob(STD_DOC);
+        }
+
+        const responseData = {
+            STD_ID,
+            SCH_ID,
+            STD_NAME,
+            STD_DOB,
+            STD_MOBILE,
+            STD_EMAIL,
+            VERIFIED,
+            SECTION,
+            INS_ID,
+            INS_NAME,
+            IDCC_ID,
+            DEP_ID,
+            DEP_NAME,
+            CRS_ID,
+            CRS_NAME,
+            CLS_ID,
+            CLS_NAME,
+            STD_PIC: stdPicBase64,
+            STD_DOC: stdDocBase64
+        };
+
+        res.json({
+            success: true,
+            data: responseData
+        });
+
+    } catch (err) {
+        console.error('Error fetching student details:', err);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch student details' 
+        });
+    }
+};
+
+export const updateStudent = async (req, res) => {
+  try {
+    const {
+      SCH_ID, STD_NAME, STD_DOB, STD_MOBILE, SECTION, VERIFIED, DEP_ID, CRS_ID, CLS_ID, stdId
+    } = req.body;
+    
+    const inst_id = req.session.inst_id;
+
+    
+    const stdPic = req.files?.STD_PIC?.[0]?.buffer;
+    const stdDoc = req.files?.STD_DOC?.[0]?.buffer;
+
+    console.log(DEP_ID, CRS_ID, CLS_ID, inst_id)
+    
+    // Step 1: Get idcc_id
+    const idccResult = await db.execute(
+        `SELECT idcc_id FROM idcc 
+        WHERE ins_id = :inst_id AND dep_id = :DEP_ID
+        AND crs_id = :CRS_ID AND cls_id = :CLS_ID`,
+        { inst_id, DEP_ID, CRS_ID, CLS_ID }
+    );
+    
+    console.log(idccResult)
+    if (!idccResult.rows.length) {
+      return res.status(400).json({ success: false, message: 'Invalid academic combination' });
+    }
+
+    const idccId = idccResult.rows[0][0];
+
+    // Step 2: Build dynamic update query
+    let updateQuery = `UPDATE student SET 
+      std_name = :STD_NAME,
+      std_dob = TO_DATE(:STD_DOB, 'YYYY-MM-DD'),
+      sch_id = :SCH_ID,
+      std_mobile = :STD_MOBILE,
+      section = :SECTION,
+      verified = :VERIFIED,
+      idcc_id = :idccId`;
+
+    const bindParams = {
+      STD_NAME, STD_DOB, SCH_ID, STD_MOBILE, SECTION, VERIFIED, idccId,
+    };
+
+    
+    // Add pic if provided
+    if (stdPic) {
+        updateQuery += `, std_pic = :stdPic`;
+        bindParams.stdPic = { val: stdPic, type: oracledb.BLOB };
+    }
+
+    
+    // Add doc if provided
+    if (stdDoc) {
+        updateQuery += `, std_doc = :stdDoc`;
+        bindParams.stdDoc = { val: stdDoc, type: oracledb.BLOB };
+    }
+    
+    updateQuery += ` WHERE std_id = :stdId`;
+    bindParams.stdId = stdId;
+
+    await db.execute(updateQuery, bindParams, { autoCommit: true });
+
+    res.status(200).json({ success: true, message: "Student updated successfully" });
+
+  } catch (err) {
+    console.error("Update student error:", err);
+    res.status(500).json({ success: false, message: "Error updating student" });
+  }
 };
 
 export const getTeacherList = async (req, res) => {
