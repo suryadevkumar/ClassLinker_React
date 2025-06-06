@@ -11,8 +11,9 @@ import setupSocket from './utils/chatSocket.js';
 
 import authRoutes from './routes/authRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
-import adminRoutes from './routes/adminRoutes.js';
 import instituteRoutes from './routes/instituteRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import teacherRoutes from './routes/teacherRoutes.js';
 import studentRoutes from './routes/studentRoutes.js';
 
 const app = express();
@@ -61,6 +62,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/institute', instituteRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/teacher', teacherRoutes);
 app.use('/api/student', studentRoutes);
 
 setupSocket(server);

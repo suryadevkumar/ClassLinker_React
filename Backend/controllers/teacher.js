@@ -1,0 +1,152 @@
+import db from '../config/db.js';
+import oracledb from 'oracledb';
+import bcrypt from 'bcrypt';
+
+//teacher signup Routes
+export const teacherSignup = async(req,res)=>{
+    const{tchName, tchCode, tchMob, tchMail, college, pass}=req.body;
+    const tchPic=req.file?.buffer;
+    const hashPass= await bcrypt.hash(pass,10);
+    const verified=0;
+    
+    try{
+        db.execute(
+            `INSERT INTO teacher (tch_id, tch_name, tch_code, tch_email, tch_mobile, tch_pass, ins_id, verified, tch_pic)
+            VALUES (tch_id_seq.NEXTVAL, :tchName, :tchCode, :tchMail, :tchMob, :hashPass, :college, :verified, :tchPic)`,
+        {tchName,tchCode, tchMail, tchMob, hashPass, college, verified, tchPic: { val: tchPic, type: oracledb.BLOB }},
+        {autoCommit: true})
+        res.send('Signup Successful')
+    }
+    catch(err)
+    {
+        console.error(err);
+    }
+};
+
+//Routes to teacher login
+export const teacherLogin = async (req,res)=>{
+    let {tchMail, pass}=req.body;
+    if(!tchMail){
+        tchMail=req.session.teacherMail;
+    }
+    req.session.teacherMail=tchMail;
+    ;
+    try{
+        const result=await db.execute(`SELECT tch_pass FROM teacher WHERE tch_email=:tchMail`,{tchMail: tchMail});
+        if(result.rows[0])
+        {
+            if(await bcrypt.compare(pass,result.rows[0][0]))
+            res.send('true');
+            else
+            res.send('false');
+        }   
+        else 
+            res.send('false');
+    }
+    catch(err){
+        console.error(err);
+    }
+};
+
+//Routes for teacher dashboard data fetch
+export const teacherDetailsFetch = async (req, res) => {
+    ;
+    try {
+        const result = await db.execute(
+            `SELECT tch_id, tch_name, tch_code, tch_email, tch_mobile, tch_pic, ins_id, verified FROM teacher WHERE tch_email = :email`,
+            { email: req.session.teacherMail }
+        );
+        
+        const [tch_id, tchName, tchId, tchEmail, tchMobile, tchPic, insId, verified] = result.rows[0];
+        req.session.teacher_id=tch_id;
+        req.session.userID=tch_id;
+        req.session.userName=tchName;
+        const result1 = await db.execute(
+            `SELECT ins_name FROM institute WHERE ins_id = :insId`,
+            { insId: insId }
+        );
+
+        const insName = result1.rows[0];
+
+        const handleLob = (tchPic) => {
+            return new Promise((resolve, reject) => {
+                let chunks = [];
+                tchPic.on('data', (chunk) => {
+                    chunks.push(chunk);
+                });
+
+                tchPic.on('end', () => {
+                    const buffer = Buffer.concat(chunks);
+                    const base64AdPic = buffer.toString('base64');
+                    resolve(base64AdPic);
+                });
+
+                tchPic.on('error', (err) => {
+                    console.error('LOB streaming error:', err);
+                    reject(err);
+                });
+            });
+        };
+
+        const base64AdPic = await handleLob(tchPic);
+
+        res.json({
+            user_id: tch_id,
+            tch_name: tchName,
+            tch_id: tchId,
+            tch_email: tchEmail,
+            tch_mobile: tchMobile,
+            tch_pic: base64AdPic,
+            ins_name: insName,
+            verified: verified
+        });
+    } catch (err) {
+        console.error('Error fetching admin details:', err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+//update/reset password for teacher
+export const updateTchPassword = async (req,res)=>{
+    let { tchMail, pass } = req.body;
+    if(!tchMail){
+        tchMail=req.session.teacherMail;
+    }
+    ;
+    const hashPass = await bcrypt.hash(pass, 10);
+    try {
+        await db.execute(
+            `UPDATE teacher SET tch_pass= :hashpass WHERE tch_email=:tchMail`,
+            {hashPass, tchMail},
+            { autoCommit: true });
+
+        res.send('Password Changed Successful');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error during signup.");
+    } 
+};
+
+//load subject list in select box
+export const subList = async(req, res)=>{
+    ;
+    try{
+        const result=await db.execute(`SELECT sub_id, dep_name, crs_name, cls_name, sub_name FROM subject_view WHERE tch_id=:tchId`,{tchId: req.session.teacher_id});
+        res.json(result.rows);
+    }
+    catch(err){
+        console.error(err);
+    }
+};
+
+//Routes to show teacher list
+export const getTeacherList = async(req,res)=>{
+    ;
+    try {
+        const result = await db.execute(`
+            SELECT DISTINCT tch_id, tch_code, tch_name FROM teacher WHERE ins_id = :ins_id`, { ins_id: req.session.inst_id });        
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+    }
+};
