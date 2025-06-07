@@ -7,13 +7,12 @@ export const teacherSignup = async(req,res)=>{
     const{tchName, tchCode, tchMob, tchMail, college, pass}=req.body;
     const tchPic=req.file?.buffer;
     const hashPass= await bcrypt.hash(pass,10);
-    const verified=0;
     
     try{
         db.execute(
-            `INSERT INTO teacher (tch_id, tch_name, tch_code, tch_email, tch_mobile, tch_pass, ins_id, verified, tch_pic)
-            VALUES (tch_id_seq.NEXTVAL, :tchName, :tchCode, :tchMail, :tchMob, :hashPass, :college, :verified, :tchPic)`,
-        {tchName,tchCode, tchMail, tchMob, hashPass, college, verified, tchPic: { val: tchPic, type: oracledb.BLOB }},
+            `INSERT INTO teacher (tch_id, tch_name, tch_code, tch_email, tch_mobile, tch_pass, ins_id, tch_pic)
+            VALUES (tch_id_seq.NEXTVAL, :tchName, :tchCode, :tchMail, :tchMob, :hashPass, :college, :tchPic)`,
+        {tchName,tchCode, tchMail, tchMob, hashPass, college, tchPic: { val: tchPic, type: oracledb.BLOB }},
         {autoCommit: true})
         res.send('Signup Successful')
     }

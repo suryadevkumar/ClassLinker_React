@@ -91,11 +91,11 @@ const StudentList = () => {
     } else {
       const filtered = students.filter(
         (student) =>
-          student[0]
+          student[1]
             .toString()
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
-          student[1].toLowerCase().includes(searchTerm.toLowerCase())
+          student[2].toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredStudents(filtered);
     }
@@ -116,7 +116,7 @@ const StudentList = () => {
       );
       setStudents(response);
       setFilteredStudents(response);
-      setSearchTerm(""); // Reset search term when new list loads
+      setSearchTerm("");
     } catch (error) {
       toast.error("Error loading student list");
       console.error("Error loading student list:", error);

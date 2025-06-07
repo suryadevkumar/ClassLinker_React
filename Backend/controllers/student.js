@@ -53,7 +53,6 @@ export const studentSignup = async (req, res) => {
     }
 
     const hashPass = await bcrypt.hash(pass, 10);
-    const verified = "Unverified";
 
     const result = await db.execute(
       `SELECT idcc_id FROM idcc 
@@ -71,16 +70,16 @@ export const studentSignup = async (req, res) => {
     await db.execute(
       `INSERT INTO student (
         std_id, std_name, std_dob, sch_id, std_mobile, 
-        std_email, std_pass, section, idcc_id, verified, 
+        std_email, std_pass, section, idcc_id, 
         std_pic, std_doc
       ) VALUES (
         std_id_seq.NEXTVAL, :stdName, TO_DATE(:stdDob, 'YYYY-MM-DD'), 
         :scholarId, :stdMob, :stdMail, :hashPass, :section, 
-        :idccId, :verified, :stdPic, :stdDoc
+        :idccId, :stdPic, :stdDoc
       )`,
       {
         stdName, stdDob, scholarId, stdMob, stdMail, hashPass,
-        section, idccId, verified,
+        section, idccId,
         stdPic: { val: stdPic, type: oracledb.BLOB },
         stdDoc: { val: receipt, type: oracledb.BLOB }
       },

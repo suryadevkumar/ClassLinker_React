@@ -557,7 +557,8 @@ export const getTeacherList = async (req, res) => {
         const result = await db.execute(
             `SELECT DISTINCT tch_id, tch_code, tch_name 
              FROM teacher 
-             WHERE ins_id = :ins_id`,
+             WHERE ins_id = :ins_id
+             AND verified = 'Unverified'`,
             { ins_id: req.session.inst_id }
         );
         res.json(result.rows);
@@ -565,6 +566,99 @@ export const getTeacherList = async (req, res) => {
         console.error(err);
         res.status(500).json({ error: 'Error fetching teacher list' });
     }
+};
+
+export const getTeacherDetails = async (req, res) => {
+    try {
+        const { teacherId } = req.query;
+
+        const teacherQuery = `
+            SELECT
+                tch_id,
+                tch_code, 
+                tch_name,
+                tch_mobile,
+                tch_email,
+                verified,
+                tch_pic
+            FROM teacher 
+            WHERE tch_id = :teacherId
+        `;
+
+        const teacherResult = await db.execute(teacherQuery, { teacherId });
+
+        if (!teacherResult.rows || teacherResult.rows.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Teacher not found' 
+            });
+        }
+
+        const [TCH_ID, TCH_CODE, TCH_NAME, TCH_MOBILE, TCH_EMAIL, VERIFIED, TCH_PIC
+        ] = teacherResult.rows[0];
+
+        let tchPicBase64 = null;
+
+        if (TCH_PIC) {
+            tchPicBase64 = await handleLob(TCH_PIC);
+        }
+
+        const responseData = {
+            TCH_ID, TCH_CODE, TCH_NAME, TCH_MOBILE, TCH_EMAIL, VERIFIED,
+            TCH_PIC: tchPicBase64,
+        };
+
+        res.json({
+            success: true,
+            data: responseData
+        });
+
+    } catch (err) {
+        console.error('Error fetching teacher details:', err);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to fetch teacher details' 
+        });
+    }
+};
+
+export const updateTeacher = async (req, res) => {
+  try {
+    const {
+      TCH_CODE, TCH_NAME, TCH_MOBILE, VERIFIED, tchId
+    } = req.body;
+    
+    const tchPic = req.file?.buffer;
+
+    // Step 2: Build dynamic update query
+    let updateQuery = `UPDATE teacher SET 
+      tch_name = :TCH_NAME,
+      tch_code = :TCH_CODE,
+      tch_mobile = :TCH_MOBILE,
+      verified = :VERIFIED`;
+
+    const bindParams = {
+      TCH_NAME, TCH_CODE, TCH_MOBILE, VERIFIED,
+    };
+
+    
+    // Add pic if provided
+    if (tchPic) {
+        updateQuery += `, tch_pic = :tchPic`;
+        bindParams.tchPic = { val: tchPic, type: oracledb.BLOB };
+    }
+    
+    updateQuery += ` WHERE tch_id = :tchId`;
+    bindParams.tchId = tchId;
+
+    await db.execute(updateQuery, bindParams, { autoCommit: true });
+
+    res.status(200).json({ success: true, message: "Teacher updated successfully" });
+
+  } catch (err) {
+    console.error("Update teacher error:", err);
+    res.status(500).json({ success: false, message: "Error updating teacher" });
+  }
 };
 
 export const getUnverifiedTeachers = async (req, res) => {

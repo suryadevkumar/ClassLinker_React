@@ -38,9 +38,9 @@ const AdminDashboard = () => {
         </div>
         <div className="w-56 h-40 p-2 m-5 bg-white text-center rounded-lg">
           <h2 className="mb-3 text-lg font-bold">Teacher</h2>
-          <a href="teacherList.html">
+          <Link to="/teacher">
             <img src={teacher_img} alt="Teacher" className="h-3/5 mx-auto" />
-          </a>
+          </Link>
         </div>
         <div className="w-56 h-40 p-2 m-5 bg-white text-center rounded-lg">
           <h2 className="mb-3 text-lg font-bold">Request</h2>
