@@ -50,9 +50,9 @@ const InstituteDashboard = () => {
             className="w-20 h-20 mr-6"
           />
           <h2 className="text-lg font-semibold">
-            <a href="admin-credentials.html" className="text-black hover:underline">
+            <Link to="/admin" className="text-black hover:underline">
               Change Admin Credentials
-            </a>
+            </Link>
           </h2>
         </div>
 

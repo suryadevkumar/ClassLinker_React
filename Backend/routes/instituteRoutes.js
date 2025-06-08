@@ -6,6 +6,6 @@ const router = express.Router();
 
 router.post('/instituteSignup', upload.single('photo'), instituteSignup);
 router.get('/getInstituteDetails', getInstituteDetails);
-router.post('/updateAdminCredentials', upload.single('photo'), updateAdminCredentials);
+router.put('/admin/update', upload.single('photo'), updateAdminCredentials);
 
 export default router;

@@ -26,6 +26,7 @@ import StudentList from './components/StudentList.jsx';
 import TeacherSignup from './components/teacherSignup.jsx';
 import TeacherList from './components/TeacherList.jsx';
 import JoinRequests from './components/JoinRequest.jsx';
+import AdminCredentials from './components/AdminCredentials.jsx';
 
 initializeSocket();
 
@@ -103,6 +104,10 @@ const appRouter = createBrowserRouter([
       {
         path: "/studentDashboard",
         element: <StudentDashboard/>
+      },
+      {
+        path: "/admin",
+        element: <AdminCredentials/>
       },
       {
         path: "/classList",

@@ -31,3 +31,18 @@ export const getInstituteDetails = async () => {
         };
     }
 };
+
+export const updateAdminDetails = async (formDataToSend) => {
+    try {
+        const response = await axios.put('/institute/admin/update', formDataToSend, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            },
+                withCredentials: true
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error updating student:", error);
+        throw error;
+    }
+};

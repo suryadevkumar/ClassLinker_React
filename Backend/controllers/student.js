@@ -1,11 +1,6 @@
 import db from "../config/db.js";
 import bcrypt from "bcrypt";
-import multer from 'multer';
 import oracledb from 'oracledb';
-
-// Configure multer for file uploads
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
 
 // function to fetch institute list
 export const getInstitute = async (req, res) => {

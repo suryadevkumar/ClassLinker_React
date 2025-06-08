@@ -23,7 +23,7 @@ const handleLob = (lob) => {
 export const getAdminDetails = async (req, res) => {
     try {
         const result = await db.execute(
-            `SELECT ad_name, ins_name, ad_email, ad_mobile, ad_pic, ins_id 
+            `SELECT ad_name, ins_name, ad_email, ad_mobile, ad_pic, ins_id, ins_email
              FROM INSTITUTE 
              WHERE ad_email = :email`,
             { email: req.session.adminMail }
@@ -36,7 +36,7 @@ export const getAdminDetails = async (req, res) => {
             });
         }
 
-        const [adName, insName, adEmail, adMobile, adPic, insId] = result.rows[0];
+        const [adName, insName, adEmail, adMobile, adPic, insId, insEmail] = result.rows[0];
         req.session.inst_id = insId;
 
         let base64AdPic = null;
@@ -52,7 +52,8 @@ export const getAdminDetails = async (req, res) => {
                 adminEmail: adEmail,
                 adminMobile: adMobile,
                 adminPic: base64AdPic,
-                instituteId: insId
+                instituteId: insId,
+                instituteEmail: insEmail
             }
         });
 

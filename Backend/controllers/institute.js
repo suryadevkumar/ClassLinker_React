@@ -152,16 +152,6 @@ export const updateAdminCredentials = async (req, res) => {
 
     } catch (err) {
         console.error('Error updating admin credentials:', err);
-        
-        // Handle unique constraint violations
-        if (err.errorNum === 1) {
-            if (err.message.includes('UK_INS_EMAIL')) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Email already exists'
-                });
-            }
-        }
 
         res.status(500).json({
             success: false,
