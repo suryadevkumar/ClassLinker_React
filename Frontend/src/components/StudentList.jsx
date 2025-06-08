@@ -285,16 +285,16 @@ const StudentList = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                         Scholar ID
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-x">
                         Name
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-x">
                         Department
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-x">
                         Course
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-x">
                         Year
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">

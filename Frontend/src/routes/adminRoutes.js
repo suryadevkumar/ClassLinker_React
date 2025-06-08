@@ -205,7 +205,7 @@ export const updateStudentDetails = async (formDataToSend) => {
     }
 };
 
-// Get detailed student information
+// Get detailed teacher information
 export const getTeacherDetails = async (teacherId) => {
     try {
         const response = await axios.get('/admin/teacher/details', {
@@ -218,7 +218,7 @@ export const getTeacherDetails = async (teacherId) => {
     }
 };
 
-// Update student details
+// Update teacher details
 export const updateTeacherDetails = async (formDataToSend) => {
     try {
         const response = await axios.put('/admin/teacher/update', formDataToSend, {
@@ -231,5 +231,46 @@ export const updateTeacherDetails = async (formDataToSend) => {
     } catch (error) {
         console.error("Error updating student:", error);
         throw error;
+    }
+};
+
+// unverified user
+export const getUnverifiedUser = async () => {
+    try {
+        const response = await axios.get('/admin/unverifiedUser',{
+            withCredentials: true
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching unverified student and teacher:", error);
+        throw error;
+    }
+};
+
+//verify user
+export const verifyUser = async (userId, userType) => {
+    try {
+        const response = await axios.post('/admin/user/verify', {
+            userId,
+            userType
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error(`Error in verify ${userType}:`, error);
+    }
+};
+
+//delete user
+export const deleteUser = async (userId, userType) => {
+    try {
+        const response = await axios.post('/admin/user/delete', {
+            userId,
+            userType
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error(`Error in verify ${userType}:`, error);
     }
 };

@@ -10,7 +10,7 @@ import {
 import { getSections } from "../routes/studentRoutes";
 import { jpgImg } from "../config/config";
 
-const StudentDetails = ({ studentId, onClose, onUpdate }) => {
+const StudentDetails = ({ studentId, onClose }) => {
   const [student, setStudent] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);

@@ -6,7 +6,7 @@ import {
 } from "../routes/adminRoutes";
 import { jpgImg } from "../config/config";
 
-const TeacherDetails = ({ teacherId, onClose, onUpdate }) => {
+const TeacherDetails = ({ teacherId, onClose }) => {
   const [teacher, setTeacher] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);

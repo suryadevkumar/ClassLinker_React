@@ -377,7 +377,7 @@ export const getStudentList = async (req, res) => {
              AND dep_id = :dep 
              AND crs_id = :crs 
              AND cls_id = :cls 
-             AND verified = 'Unverified'
+             AND verified = 'Verified'
              ORDER BY sch_id ASC`,
             { 
                 ins_id: req.session.inst_id,
@@ -558,7 +558,7 @@ export const getTeacherList = async (req, res) => {
             `SELECT DISTINCT tch_id, tch_code, tch_name 
              FROM teacher 
              WHERE ins_id = :ins_id
-             AND verified = 'Unverified'`,
+             AND verified = 'Verified'`,
             { ins_id: req.session.inst_id }
         );
         res.json(result.rows);
@@ -661,84 +661,113 @@ export const updateTeacher = async (req, res) => {
   }
 };
 
-export const getUnverifiedTeachers = async (req, res) => {
-    try {
-        const result = await db.execute(
-            `SELECT tch_id, tch_name, tch_pic 
-             FROM teacher 
-             WHERE ins_id = :inst_id AND verified = 0`,
-            { inst_id: req.session.inst_id }
-        );
+export const getUnverifiedUsers = async (req, res) => {
+  try {
+    const inst_id = req.session.inst_id;
 
-        const teachers = await Promise.all(result.rows.map(async ([id, name, pic]) => ({
-            tch_id: id,
-            tch_name: name,
-            tch_pic: pic ? await handleLob(pic) : null
-        })));
+    // Fetch unverified teachers
+    const teacherResult = await db.execute(
+      `SELECT tch_id, tch_name, tch_pic 
+       FROM teacher 
+       WHERE ins_id = :inst_id AND verified = 'Unverified'`,
+      { inst_id }
+    );
 
-        res.json(teachers);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error fetching unverified teachers' });
-    }
+    const teachers = await Promise.all(
+      teacherResult.rows.map(async ([id, name, pic]) => ({
+        tch_id: id,
+        tch_name: name,
+        tch_pic: pic ? await handleLob(pic) : null,
+        status: 'pending'
+      }))
+    );
+
+    // Fetch unverified students
+    const studentResult = await db.execute(
+      `SELECT std_id, std_name, std_pic 
+       FROM student_view 
+       WHERE ins_id = :inst_id AND verified = 'Unverified'`,
+      { inst_id }
+    );
+
+    const students = await Promise.all(
+      studentResult.rows.map(async ([id, name, pic]) => ({
+        std_id: id,
+        std_name: name,
+        std_pic: pic ? await handleLob(pic) : null,
+        status: 'pending'
+      }))
+    );
+
+    // Send combined response
+    res.json({
+      teachers,
+      students
+    });
+
+  } catch (err) {
+    console.error("Error fetching unverified users:", err);
+    res.status(500).json({ error: 'Error fetching unverified users' });
+  }
 };
 
-export const getUnverifiedStudents = async (req, res) => {
-    try {
-        const result = await db.execute(
-            `SELECT std_id, std_name, std_pic 
-             FROM student_view 
-             WHERE ins_id = :inst_id AND verified = 0`,
-            { inst_id: req.session.inst_id }
-        );
+export const verifyUser = async (req, res) => {
+  try {
+    const { userType, userId } = req.body;
 
-        const students = await Promise.all(result.rows.map(async ([id, name, pic]) => ({
-            std_id: id,
-            std_name: name,
-            std_pic: pic ? await handleLob(pic) : null
-        })));
-
-        res.json(students);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error fetching unverified students' });
+    if (!userType || !userId) {
+      return res.status(400).json({ error: "Missing userType or userId" });
     }
+
+    let query = '';
+    let bindParams = { id: userId };
+
+    if (userType === 'Teacher') {
+      query = `UPDATE teacher SET verified = 'Verified' WHERE tch_id = :id`;
+    } else if (userType === 'Student') {
+      query = `UPDATE student SET verified = 'Verified' WHERE std_id = :id`;
+    } else {
+      return res.status(400).json({ error: 'Invalid user type' });
+    }
+
+    await db.execute(query, bindParams, { autoCommit: true });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error verifying user:", err);
+    res.status(500).json({ error: 'Error verifying user' });
+  }
 };
 
-export const verifyTeacher = async (req, res) => {
-    try {
-        await db.execute(
-            `UPDATE teacher 
-             SET verified = :status 
-             WHERE tch_id = :tch_id`,
-            { 
-                tch_id: req.body.tch_id,
-                status: req.body.status === 'accept' ? 1 : 2
-            },
-            { autoCommit: true }
-        );
-        res.json({ success: true });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error verifying teacher' });
-    }
-};
+export const deleteUser = async (req, res) => {
+  try {
+    const { userType, userId } = req.body;
 
-export const verifyStudent = async (req, res) => {
-    try {
-        await db.execute(
-            `UPDATE student 
-             SET verified = :status 
-             WHERE std_id = :std_id`,
-            { 
-                std_id: req.body.std_id,
-                status: req.body.status === 'accept' ? 1 : 2
-            },
-            { autoCommit: true }
-        );
-        res.json({ success: true });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error verifying student' });
+    if (!userType || !userId) {
+      return res.status(400).json({ error: "Missing userType or userId" });
     }
+
+    let query = '';
+    let bindParams = { id: userId };
+
+    if (userType === 'Teacher') {
+      query = `DELETE FROM teacher WHERE tch_id = :id`;
+    } else if (userType === 'Student') {
+      query = `DELETE FROM student WHERE std_id = :id`;
+    } else {
+      return res.status(400).json({ error: 'Invalid user type' });
+    }
+
+    const result = await db.execute(query, bindParams, { autoCommit: true });
+
+    // Check if any rows were affected
+    if (result.rowsAffected === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    res.status(500).json({ error: 'Error deleting user' });
+  }
 };

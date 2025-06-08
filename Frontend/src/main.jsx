@@ -25,6 +25,7 @@ import ChangePassword from './components/ChangePassword.jsx';
 import StudentList from './components/StudentList.jsx';
 import TeacherSignup from './components/teacherSignup.jsx';
 import TeacherList from './components/TeacherList.jsx';
+import JoinRequests from './components/JoinRequest.jsx';
 
 initializeSocket();
 
@@ -122,6 +123,10 @@ const appRouter = createBrowserRouter([
       {
         path: "/teacher",
         element: <TeacherList/>
+      },
+      {
+        path: "/request",
+        element: <JoinRequests/>
       },
     ]
   }

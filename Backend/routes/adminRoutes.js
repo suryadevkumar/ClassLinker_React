@@ -3,10 +3,11 @@ import {
     getAdminDetails, getDepartments, getCourses, getClasses, addClass,
     getClassList, getClassDetails, getSubjectList,
     addSubject, updateSubject, deleteSubject,
-    getStudentList, getTeacherList, getUnverifiedTeachers,
-    getUnverifiedStudents, verifyTeacher, verifyStudent,
+    getStudentList, getTeacherList,
     getStudentDetails, getTeacherDetails,
-    updateStudent, updateTeacher
+    updateStudent, updateTeacher,
+    getUnverifiedUsers,
+    verifyUser, deleteUser
 } from '../controllers/admin.js';
 import upload from '../utils/uploadMiddleware.js';
 
@@ -35,9 +36,8 @@ router.put('/student/update', upload.fields([{ name: 'STD_PIC', maxCount: 1 }, {
 router.get('/teacher/list', getTeacherList);
 router.get('/teacher/details', getTeacherDetails);
 router.put('/teacher/update', upload.single('TCH_PIC'), updateTeacher);
-router.get('/teacher/unverified', getUnverifiedTeachers);
-router.get('/student/unverified', getUnverifiedStudents);
-router.post('/teacher/verify', verifyTeacher);
-router.post('/student/verify', verifyStudent);
+router.get('/unverifiedUser', getUnverifiedUsers);
+router.post('/user/verify', verifyUser);
+router.post('/user/delete', deleteUser);
 
 export default router;

@@ -76,7 +76,7 @@ const TeacherList = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-amber-50 to-pink-100 p-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-4xl mx-auto">
 
         {/* Teacher List Section */}
         {teachers.length > 0 ? (
@@ -106,7 +106,7 @@ const TeacherList = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                         Teacher ID
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-x">
                         Name
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
@@ -116,7 +116,7 @@ const TeacherList = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredTeachers.map((teacher, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
+                      <tr key={index} className="hover:bg-gray-50 border-b border-gray-300">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {teacher[1]}
                         </td>
@@ -126,7 +126,7 @@ const TeacherList = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           <button
                             onClick={() => handleViewTeacher(teacher[0])}
-                            className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                            className="px-6 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                           >
                             View
                           </button>
