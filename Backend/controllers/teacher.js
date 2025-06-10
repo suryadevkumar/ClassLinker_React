@@ -1,6 +1,7 @@
 import db from '../config/db.js';
 import oracledb from 'oracledb';
 import bcrypt from 'bcrypt';
+import handleLob from '../utils/handleLob.js';
 
 //teacher signup Routes
 export const teacherSignup = async(req,res)=>{
@@ -57,6 +58,9 @@ export const teacherDetailsFetch = async (req, res) => {
         );
         
         const [tch_id, tchName, tchId, tchEmail, tchMobile, tchPic, insId, verified] = result.rows[0];
+
+        if(verified!=='Verified') return res.json({ verified: verified });
+
         req.session.teacher_id=tch_id;
         req.session.userID=tch_id;
         req.session.userName=tchName;
@@ -66,26 +70,6 @@ export const teacherDetailsFetch = async (req, res) => {
         );
 
         const insName = result1.rows[0];
-
-        const handleLob = (tchPic) => {
-            return new Promise((resolve, reject) => {
-                let chunks = [];
-                tchPic.on('data', (chunk) => {
-                    chunks.push(chunk);
-                });
-
-                tchPic.on('end', () => {
-                    const buffer = Buffer.concat(chunks);
-                    const base64AdPic = buffer.toString('base64');
-                    resolve(base64AdPic);
-                });
-
-                tchPic.on('error', (err) => {
-                    console.error('LOB streaming error:', err);
-                    reject(err);
-                });
-            });
-        };
 
         const base64AdPic = await handleLob(tchPic);
 
@@ -105,30 +89,8 @@ export const teacherDetailsFetch = async (req, res) => {
     }
 };
 
-//update/reset password for teacher
-export const updateTchPassword = async (req,res)=>{
-    let { tchMail, pass } = req.body;
-    if(!tchMail){
-        tchMail=req.session.teacherMail;
-    }
-    ;
-    const hashPass = await bcrypt.hash(pass, 10);
-    try {
-        await db.execute(
-            `UPDATE teacher SET tch_pass= :hashpass WHERE tch_email=:tchMail`,
-            {hashPass, tchMail},
-            { autoCommit: true });
-
-        res.send('Password Changed Successful');
-    } catch (err) {
-        console.error(err);
-        res.status(500).send("Error during signup.");
-    } 
-};
-
 //load subject list in select box
-export const subList = async(req, res)=>{
-    ;
+export const subjectList = async(req, res)=>{
     try{
         const result=await db.execute(`SELECT sub_id, dep_name, crs_name, cls_name, sub_name FROM subject_view WHERE tch_id=:tchId`,{tchId: req.session.teacher_id});
         res.json(result.rows);

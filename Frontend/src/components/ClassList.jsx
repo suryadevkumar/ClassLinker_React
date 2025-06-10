@@ -32,8 +32,6 @@ const ClassList = () => {
   const [showCourseSelect, setShowCourseSelect] = useState(false);
   const [modalCourses, setModalCourses] = useState([]);
 
-  const navigate = useNavigate();
-
   // Load departments on component mount
   useEffect(() => {
     const fetchDepartments = async () => {

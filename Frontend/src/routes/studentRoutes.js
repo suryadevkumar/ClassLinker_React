@@ -37,3 +37,27 @@ export const studentSignup = async (formData) => {
         console.log("Server says:", error.response?.data); // Add this!
     }
 }
+
+export const fetchStudentDetails = async () => {
+  try {
+    const response = await axios.get(`/student/details`, {
+      withCredentials: true
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching student details:', error);
+    throw error;
+  }
+};
+
+export const fetchSubjectList = async () => {
+  try {
+    const response = await axios.get('/student/subject/list', {
+      withCredentials: true
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching subject list:', error);
+    throw error;
+  }
+};

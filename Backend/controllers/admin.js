@@ -1,24 +1,6 @@
 import db from '../config/db.js';
 import oracledb from 'oracledb';
-
-const handleLob = (lob) => {
-    return new Promise((resolve, reject) => {
-        let chunks = [];
-        lob.on('data', (chunk) => {
-            chunks.push(chunk);
-        });
-
-        lob.on('end', () => {
-            const buffer = Buffer.concat(chunks);
-            resolve(buffer.toString('base64'));
-        });
-
-        lob.on('error', (err) => {
-            console.error('LOB streaming error:', err);
-            reject(err);
-        });
-    });
-};
+import handleLob from '../utils/handleLob.js';
 
 export const getAdminDetails = async (req, res) => {
     try {

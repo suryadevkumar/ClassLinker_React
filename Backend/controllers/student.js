@@ -1,6 +1,7 @@
 import db from "../config/db.js";
 import bcrypt from "bcrypt";
 import oracledb from 'oracledb';
+import handleLob from "../utils/handleLob.js";
 
 // function to fetch institute list
 export const getInstitute = async (req, res) => {
@@ -93,4 +94,61 @@ export const studentSignup = async (req, res) => {
     }
     res.status(500).json({ success: false, message: "Error during signup" });
   }
+};
+
+//Routes for student dashboard data fetch
+export const studentDetailsFetch = async (req, res) => {
+    ;
+    try {
+        const result = await db.execute(
+            `SELECT std_id, std_name, sch_id, std_email, std_mobile, std_pic, idcc_id, verified FROM student WHERE std_email = :email`,
+            { email: req.session.studentMail }
+        );
+        
+        const [stdId, stdName, schid, stdEmail, stdMobile, stdPic, idcc, verified] = result.rows[0];
+
+        if(verified !== "Verified") return res.json({verified: verified});
+
+        req.session.idcc_id = idcc;
+        req.session.std_id = stdId;
+        req.session.userID = stdId;
+        req.session.userName = stdName;
+        const result1 = await db.execute(
+            `SELECT ins_name, dep_name, crs_name, cls_name, section FROM class_view WHERE idcc_id = :idcc`,
+            { idcc: idcc }
+        );
+
+        const [insName, depName, crsName, clsName, sec] = result1.rows[0];
+
+        const base64AdPic = await handleLob(stdPic);
+
+        res.json({
+            std_id: stdId,
+            std_name: stdName,
+            sch_id: schid,
+            std_email: stdEmail,
+            std_mobile: stdMobile,
+            std_pic: base64AdPic,
+            ins_name: insName,
+            dep_name: depName,
+            crs_name: crsName,
+            cls_name: clsName,
+            section: sec,
+            verified: verified
+        });
+    } catch (err) {
+        console.error('Error fetching admin details:', err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+//Routes to load subject list in student dashboard
+export const subjectList = async(req, res)=>{
+    try{
+        const result=await db.execute(`SELECT sub_id, sub_name FROM subject WHERE idcc_id=:idccId`,{idccId: req.session.idcc_id});
+        res.json(result.rows);
+    }
+    catch(err){
+        console.error(err);
+    }
 };

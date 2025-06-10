@@ -27,6 +27,7 @@ import TeacherSignup from './components/teacherSignup.jsx';
 import TeacherList from './components/TeacherList.jsx';
 import JoinRequests from './components/JoinRequest.jsx';
 import AdminCredentials from './components/AdminCredentials.jsx';
+import MarkAttendance from './components/MarkAttendance.jsx';
 
 initializeSocket();
 
@@ -133,6 +134,10 @@ const appRouter = createBrowserRouter([
         path: "/request",
         element: <JoinRequests/>
       },
+      {
+        path: "/mark/attendance",
+        element: <MarkAttendance/>
+      }
     ]
   }
 ]);

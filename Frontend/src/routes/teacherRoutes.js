@@ -15,7 +15,7 @@ export const submitTeacherSignup = async (formData) => {
 
 export const fetchTeacherDetails = async () => {
   try {
-    const response = await axios.get(`teacher/teacherDetailsFetch`, {
+    const response = await axios.get('teacher/details', {
       withCredentials: true
     });
     return response.data;
@@ -27,7 +27,7 @@ export const fetchTeacherDetails = async () => {
 
 export const fetchSubjectList = async () => {
   try {
-    const response = await axios.get(`teacher/subList`, {
+    const response = await axios.get('teacher/subject/list', {
       withCredentials: true
     });
     return response.data;
