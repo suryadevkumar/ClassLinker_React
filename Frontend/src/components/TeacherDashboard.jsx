@@ -8,7 +8,7 @@ import chat from '../assets/img/chat.png';
 import video from '../assets/img/video.png';
 import changePass from '../assets/img/changePass.png';
 import { fetchTeacherDetails, fetchSubjectList } from '../routes/teacherRoutes';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import UnverifiedCard from './UnverifiedCard';
 
 const TeacherDashboard = () => {
@@ -65,7 +65,7 @@ const TeacherDashboard = () => {
         navigate('/mark/attendance', {state: {'subjectId': selectedSubject}});
         break;
       case 'notes':
-        navigate('/notes');
+        navigate('/notes', {state: {'userType': 'teacher', 'subjectId': selectedSubject}});
         break;
       case 'assignment':
         navigate('/assignment');
@@ -178,13 +178,13 @@ const TeacherDashboard = () => {
             <h2 className="text-xl font-semibold">Group Chat</h2>
           </div>
 
-          <div 
+          <Link to="/changePassword"
+                  state={{ userType: "Teacher" }}
             className="bg-white rounded-lg shadow-md p-4 flex items-center cursor-pointer hover:bg-gray-50 transition"
-            onClick={() => navigate('/changePassword')}
           >
             <img src={changePass} alt="Change Password" className="w-16 h-16 mr-4" />
             <h2 className="text-xl font-semibold">Change Password</h2>
-          </div>
+          </Link>
         </div>
       </main>
 

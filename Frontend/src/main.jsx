@@ -28,6 +28,8 @@ import TeacherList from './components/TeacherList.jsx';
 import JoinRequests from './components/JoinRequest.jsx';
 import AdminCredentials from './components/AdminCredentials.jsx';
 import MarkAttendance from './components/MarkAttendance.jsx';
+import Notes from './components/Notes.jsx';
+import Assignment from './components/Assignment.jsx';
 
 initializeSocket();
 
@@ -137,7 +139,15 @@ const appRouter = createBrowserRouter([
       {
         path: "/mark/attendance",
         element: <MarkAttendance/>
-      }
+      },
+      {
+        path: "/notes",
+        element: <Notes/>
+      },
+      {
+        path: "/assignment",
+        element: <Assignment/>
+      },
     ]
   }
 ]);

@@ -15,7 +15,9 @@ import instituteRoutes from './routes/instituteRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import teacherRoutes from './routes/teacherRoutes.js';
 import studentRoutes from './routes/studentRoutes.js';
-import attendanceRoutes from './routes/attendanceRoutes.js'
+import attendanceRoutes from './routes/attendanceRoutes.js';
+import notesRoutes from './routes/notesRoutes.js';
+import assignmentRoutes from './routes/assignmentRoutes.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -66,6 +68,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/notes', notesRoutes);
+app.use('/api/assignment', assignmentRoutes);
 
 setupSocket(server);
 
