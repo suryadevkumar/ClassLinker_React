@@ -59,7 +59,7 @@ const TeacherDashboard = () => {
 
     switch (page) {
       case 'view-student-assignment':
-        navigate('/view-student-assignment');
+        navigate('/view/assignment', {state: {'subjectId': selectedSubject}});
         break;
       case 'attendance':
         navigate('/mark/attendance', {state: {'subjectId': selectedSubject}});
@@ -68,13 +68,13 @@ const TeacherDashboard = () => {
         navigate('/notes', {state: {'userType': 'teacher', 'subjectId': selectedSubject}});
         break;
       case 'assignment':
-        navigate('/assignment');
+        navigate('/assignment', {state: {'userType': 'teacher', 'subjectId': selectedSubject}});
         break;
       case 'chat':
         navigate('/chat');
         break;
       case 'lectures':
-        navigate('/teacher-lectures');
+        navigate('/lecture', {state: {'subjectId': selectedSubject}});
         break;
       default:
         break;

@@ -24,6 +24,7 @@ export const uploadAssignment = async (req, res) => {
   const { assignmentTitle, sub_id, dueDate } = req.body;
   const assignmentFile = req.file?.buffer;
   const fileType = req.file?.mimetype;
+  console.log(req.body, assignmentFile, fileType)
 
   try {
     const result = await db.execute(

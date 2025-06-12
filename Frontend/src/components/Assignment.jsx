@@ -7,6 +7,7 @@ import {
   deleteAssignment,
 } from "../routes/assignmentRoutes";
 import fileImage from "../assets/img/file.png";
+import { useLocation } from "react-router-dom";
 
 const Assignment = () => {
   const [assignments, setAssignments] = useState([]);
@@ -14,7 +15,11 @@ const Assignment = () => {
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [file, setFile] = useState(null);
-  const subId = sessionStorage.getItem("sub_id");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [assignmentToDelete, setAssignmentToDelete] = useState(null);
+
+  const location = useLocation();
+  const subId = location.state?.subjectId;
 
   useEffect(() => {
     const fetchAssignments = async () => {
@@ -93,18 +98,44 @@ const Assignment = () => {
     }
   };
 
-  const handleDelete = async (assignmentId) => {
-    if (window.confirm("Are you sure you want to delete this assignment?")) {
-      try {
-        await deleteAssignment(assignmentId);
-        toast.success("Assignment deleted successfully");
+  const handleView = async (assignId) => {
+    try {
+      const { data, contentType } = await downloadAssignment(assignId);
 
-        // Refresh assignments list
-        const assignmentList = await getAssignmentList(subId);
-        setAssignments(assignmentList);
-      } catch (error) {
-        toast.error("Error deleting assignment");
-      }
+      // Create blob with correct file type
+      const blob = new Blob([data], { type: contentType });
+      const url = window.URL.createObjectURL(blob);
+
+      // Open in new tab
+      window.open(url, "_blank");
+
+      // Cleanup will happen when the tab is closed
+    } catch (error) {
+      toast.error("Failed to open assignment");
+      console.error("View error:", error);
+    }
+  };
+
+  const promptDelete = (assignmentId) => {
+    setAssignmentToDelete(assignmentId);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDelete = async () => {
+    if (!assignmentToDelete) return;
+
+    try {
+      await deleteAssignment(assignmentToDelete);
+      toast.success("Assignment deleted successfully");
+
+      // Refresh assignments list
+      const assignmentList = await getAssignmentList(subId);
+      setAssignments(assignmentList);
+    } catch (error) {
+      toast.error("Error deleting assignment");
+    } finally {
+      setShowDeleteConfirm(false);
+      setAssignmentToDelete(null);
     }
   };
 
@@ -118,6 +149,35 @@ const Assignment = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-amber-50 to-pink-100 flex flex-col">
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4">Confirm Delete</h3>
+            <p className="mb-6">
+              Are you sure you want to delete this assignment? This action
+              cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setAssignmentToDelete(null);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="flex-grow container mx-auto px-4 py-8">
@@ -171,7 +231,7 @@ const Assignment = () => {
                 type="file"
                 id="assignmentFile"
                 onChange={handleFileChange}
-                accept=".pdf,.docx,.txt,.jpeg,.jpg"
+                accept=".pdf,.docx,.txt,.jpeg,.jpg,.png"
                 className="w-full px-4 py-2 border rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 required
               />
@@ -186,7 +246,7 @@ const Assignment = () => {
         </div>
 
         {/* Assignments List */}
-        <div className="w-full md:w-2/3 mx-auto">
+        <div className="w-full lg:w-2/3 mx-auto">
           <h2 className="text-2xl font-bold mb-4">Assignments List</h2>
           {assignments.length === 0 ? (
             <div className="bg-white rounded-xl shadow-lg p-6 text-center">
@@ -208,16 +268,40 @@ const Assignment = () => {
                   <div className="flex-grow">
                     <h3 className="font-semibold">{assignment[1]}</h3>
                   </div>
+                  <div className="flex-grow">
+                    <h3 className="font-semibold">
+                      Due date:{" "}
+                      <span
+                        className={
+                          new Date(assignment[2]) < new Date()
+                            ? "text-red-500"
+                            : "text-green-500"
+                        }
+                      >
+                        {assignment[2]}
+                      </span>
+                    </h3>
+                  </div>
+
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => handleDownload(assignment[0])}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200"
+                      onClick={() => handleView(assignment[0])}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200"
+                      title="View"
                     >
                       View
                     </button>
                     <button
-                      onClick={() => handleDelete(assignment[0])}
+                      onClick={() => handleDownload(assignment[0])}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200"
+                      title="Download"
+                    >
+                      Download
+                    </button>
+                    <button
+                      onClick={() => promptDelete(assignment[0])}
                       className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition duration-200"
+                      title="Delete"
                     >
                       Delete
                     </button>

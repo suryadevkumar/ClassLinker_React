@@ -30,6 +30,8 @@ import AdminCredentials from './components/AdminCredentials.jsx';
 import MarkAttendance from './components/MarkAttendance.jsx';
 import Notes from './components/Notes.jsx';
 import Assignment from './components/Assignment.jsx';
+import SubmitAssignmentView from './components/SubmitAssignmentView.jsx';
+import Lectures from './components/Lecture.jsx';
 
 initializeSocket();
 
@@ -147,6 +149,14 @@ const appRouter = createBrowserRouter([
       {
         path: "/assignment",
         element: <Assignment/>
+      },
+      {
+        path: "/view/assignment",
+        element: <SubmitAssignmentView/>
+      },
+      {
+        path: "/lecture",
+        element: <Lectures/>
       },
     ]
   }

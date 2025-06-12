@@ -244,8 +244,7 @@ const Notes = () => {
 
                 {/* Notes List */}
                 <div
-                    className={`w-full ${userType === "teacher" ? "md:w-2/3" : "md:w-2/3"
-                        } mx-auto`}
+                    className={`w-full lg:w-2/3  mx-auto`}
                 >
                     <h3 className="text-xl font-semibold mb-4">
                         {userType === "teacher" ? "Notes List" : "Available Notes"}

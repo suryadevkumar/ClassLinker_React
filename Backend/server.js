@@ -18,6 +18,7 @@ import studentRoutes from './routes/studentRoutes.js';
 import attendanceRoutes from './routes/attendanceRoutes.js';
 import notesRoutes from './routes/notesRoutes.js';
 import assignmentRoutes from './routes/assignmentRoutes.js';
+import lectureRoutes from './routes/lectureRoutes.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -47,6 +48,22 @@ app.use(session({
   }
 }));
 
+// Important for video streaming
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+});
+
+// Disable compression for video streams
+app.use((req, res, next) => {
+  if (req.url.includes('/lecture/stream')) {
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Content-Encoding', 'identity');
+  }
+  next();
+});
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -70,6 +87,7 @@ app.use('/api/student', studentRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/assignment', assignmentRoutes);
+app.use('/api/lecture', lectureRoutes);
 
 setupSocket(server);
 
@@ -143,14 +161,14 @@ setupSocket(server);
 
 //     try {
 //         connection = await oracledb.getConnection(dbConfig);
-        
+
 //         const totalClassesResult = await connection.execute(
 //             `SELECT COUNT(*) AS total_classes 
 //             FROM attendance 
 //             WHERE sub_id = :sub_id AND std_id= :std_id`,
 //             { sub_id: sub_id, std_id: std_id }
 //         );
-        
+
 //         const totalPresentResult = await connection.execute(
 //             `SELECT COUNT(*) AS total_present 
 //             FROM attendance 
@@ -216,7 +234,7 @@ setupSocket(server);
 //     let connection;
 //     try {
 //         connection = await oracledb.getConnection(dbConfig);
-        
+
 //         const result=await connection.execute(
 //             `UPDATE attendance 
 //             SET attend_status = :status 
@@ -539,7 +557,7 @@ setupSocket(server);
 //             WHERE sub_id = :sub_id AND std_id= :std_id`,
 //             { sub_id: sub_id, std_id: req.session.std_id }
 //         );
-        
+
 //         const totalPresentResult = await connection.execute(
 //             `SELECT COUNT(*) AS total_present 
 //             FROM attendance 
@@ -673,7 +691,7 @@ setupSocket(server);
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-      console.log('Server running at http://localhost:3000')
+  console.log('Server running at http://localhost:3000')
 });
 
 // Graceful shutdown
