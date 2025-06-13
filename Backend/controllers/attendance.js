@@ -162,7 +162,6 @@ export const checkAttendanceMarked = async (req, res) => {
 //Routes to load student attendance sheet and status for student view
 export const getAttendanceDetails = async (req, res) => {
     const { sub_id } = req.body;
-    ;
 
     try {
         const result=await db.execute(

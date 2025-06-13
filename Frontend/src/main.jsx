@@ -33,6 +33,7 @@ import Assignment from './components/Assignment.jsx';
 import SubmitAssignmentView from './components/SubmitAssignmentView.jsx';
 import Lectures from './components/Lecture.jsx';
 import StudentAssignment from './components/StudentAssignment.jsx';
+import StudentAttendance from './components/StudentAttendance.jsx';
 
 initializeSocket();
 
@@ -162,6 +163,10 @@ const appRouter = createBrowserRouter([
       {
         path: "/student/assignment",
         element: <StudentAssignment/>
+      },
+      {
+        path: "/student/attendance",
+        element: <StudentAttendance/>
       },
     ]
   }

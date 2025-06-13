@@ -58,7 +58,7 @@ const handleNavigation = (page) => {
 
   switch (page) {
     case 'attendance':
-      navigate('/student-attendance-sheet');
+      navigate('/student/attendance', {state: {subjectId: selectedSubject[0], subjectName: selectedSubject[1]}});
       break;
     case 'notes':
       navigate('/notes', {state: {subjectId: selectedSubject[0], subjectName: selectedSubject[1]}});

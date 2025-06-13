@@ -71,19 +71,6 @@ export const checkAttendanceMarked = async (std_id, sub_id) => {
   }
 };
 
-// Fetch student details
-export const fetchStudentDetails = async () => {
-  try {
-    const response = await axios.get('/student/studentDetailsFetch', {
-      withCredentials: true
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching student details:', error);
-    throw error;
-  }
-};
-
 // Fetch attendance details
 export const fetchAttendanceDetails = async (sub_id) => {
   try {
