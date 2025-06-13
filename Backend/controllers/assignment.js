@@ -93,27 +93,18 @@ export const deleteAssignment = async (req, res) => {
 };
 
 export const submitAssignment = async (req, res) => {
-  const { std_id, as_id } = req.body;
+  const { as_id } = req.body;
+  const std_id = req.session.std_id;
   const pdfFile = req.file?.buffer;
   const fileType = req.file?.mimetype;
-
-  // Convert IDs to numbers to ensure they're valid
-  const numericStdId = Number(std_id);
-  const numericAsId = Number(as_id);
-
-  if (isNaN(numericStdId)) {
-    return res.status(400).json({ error: 'Invalid student ID' });
-  }
-  if (isNaN(numericAsId)) {
-    return res.status(400).json({ error: 'Invalid assignment ID' });
-  }
+  console.log(as_id, std_id)
 
   try {
     // Check if already submitted
     const checkResult = await db.execute(
       `SELECT 1 FROM std_assignment_submit 
        WHERE std_id = :std_id AND as_id = :as_id`,
-      { std_id: numericStdId, as_id: numericAsId }
+      { std_id , as_id }
     );
 
     if (checkResult.rows.length > 0) {
@@ -125,8 +116,8 @@ export const submitAssignment = async (req, res) => {
        (submit_id, std_id, as_id, pdf_file, file_type) 
        VALUES (submit_id_seq.NEXTVAL, :std_id, :as_id, :pdf_file, :file_type)`,
       {
-        std_id: numericStdId,
-        as_id: numericAsId,
+        std_id,
+        as_id,
         pdf_file: { val: pdfFile, type: oracledb.BLOB },
         file_type: fileType
       },
@@ -142,7 +133,8 @@ export const submitAssignment = async (req, res) => {
 
 // In your backend controllers (assignment.js)
 export const getStudentSubmissions = async (req, res) => {
-  const { std_id, as_id } = req.body;
+  const { as_id } = req.body;
+  const std_id = req.session.std_id;
 
   // Validate input
   if (!std_id || !as_id) {

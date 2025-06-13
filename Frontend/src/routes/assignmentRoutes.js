@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 
 // Get assignment list
@@ -67,7 +66,8 @@ export const deleteAssignment = async (assignmentId) => {
 // Submit assignment
 export const submitAssignment = async (formData) => {
   try {
-    const response = await axios.post(`/assignment/submit`, formData, {
+    const response = await axios.post('/assignment/submit', formData, {
+      withCredentials: true,
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -139,9 +139,11 @@ export const viewStudentAssignment = async (submitId) => {
 };
 
 // Get student submissions
-export const getStudentSubmissions = async (std_id, as_id) => {
+export const getStudentSubmissions = async (as_id) => {
   try {
-    const response = await axios.post(`/assignment/getStudentSubmissions`, { std_id, as_id });
+    const response = await axios.post(`/assignment/getStudentSubmissions`, { as_id },{
+      withCredentials: true
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching submissions:', error);

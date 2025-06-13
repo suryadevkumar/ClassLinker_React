@@ -32,6 +32,7 @@ import Notes from './components/Notes.jsx';
 import Assignment from './components/Assignment.jsx';
 import SubmitAssignmentView from './components/SubmitAssignmentView.jsx';
 import Lectures from './components/Lecture.jsx';
+import StudentAssignment from './components/StudentAssignment.jsx';
 
 initializeSocket();
 
@@ -157,6 +158,10 @@ const appRouter = createBrowserRouter([
       {
         path: "/lecture",
         element: <Lectures/>
+      },
+      {
+        path: "/student/assignment",
+        element: <StudentAssignment/>
       },
     ]
   }

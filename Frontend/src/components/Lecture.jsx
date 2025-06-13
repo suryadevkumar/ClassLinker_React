@@ -12,6 +12,7 @@ const Lectures = () => {
   const [lectures, setLectures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [videoToDelete, setVideoToDelete] = useState(null);
@@ -41,11 +42,26 @@ const Lectures = () => {
     loadLectures();
   }, [sub_id, navigate]);
 
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i]);
+  };
+
   const handleFileChange = (e) => {
-    setFormData({
-      ...formData,
-      videoFile: e.target.files[0],
-    });
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('video/') && !file.type.startsWith('image/')) {
+        toast.error('Please select a video or image file');
+        return;
+      }
+      setFormData({
+        ...formData,
+        videoFile: file,
+      });
+    }
   };
 
   const handleInputChange = (e) => {
@@ -60,7 +76,7 @@ const Lectures = () => {
     e.preventDefault();
 
     if (!formData.videoFile) {
-      toast.warning("Please select a video file");
+      toast.warning("Please select a file");
       return;
     }
 
@@ -71,20 +87,26 @@ const Lectures = () => {
 
     try {
       setUploading(true);
+      setUploadProgress(0);
+
       const lectureData = new FormData();
       lectureData.append("videoFile", formData.videoFile);
       lectureData.append("title", formData.title);
       lectureData.append("description", formData.description);
       lectureData.append("sub_id", sub_id);
 
-      await uploadLecture(lectureData);
-      toast.success("Lecture uploaded successfully!");
+      await uploadLecture(lectureData, {
+        onUploadProgress: (progressEvent) => {
+          const progress = Math.round(
+            (progressEvent.loaded / progressEvent.total) * 100
+          );
+          setUploadProgress(progress);
+        },
+      });
 
-      // Refresh lectures list
+      toast.success("File uploaded successfully!");
       const updatedLectures = await getLectures(sub_id);
       setLectures(updatedLectures);
-
-      // Reset form
       setFormData({
         title: "",
         description: "",
@@ -92,29 +114,39 @@ const Lectures = () => {
       });
       document.getElementById("videoFile").value = "";
     } catch (error) {
-      toast.error(error.response?.data?.error || "Failed to upload lecture");
-      console.error("Error uploading lecture:", error);
+      toast.error(error.response?.data?.error || "Failed to upload file");
+      console.error("Error uploading file:", error);
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
   const handlePlayVideo = (videoId) => {
+    if (currentlyPlaying && currentlyPlaying !== videoId) {
+      handleStopVideo(currentlyPlaying);
+    }
+    
     setCurrentlyPlaying(videoId);
-    // Use setTimeout to ensure the video element is in the DOM
-    setTimeout(() => {
-      const videoElement = videoRefs.current[videoId];
-      if (videoElement) {
-        // Force reload of the video source
-        videoElement.load();
+    const videoElement = videoRefs.current[videoId];
+    
+    if (videoElement) {
+      videoElement.src = `/lecture/stream?video_id=${videoId}`;
+      videoElement.load();
+      
+      videoElement.onerror = () => {
+        console.error('Video error:', videoElement.error);
+        toast.error('Failed to play video');
+        setCurrentlyPlaying(null);
+      };
 
-        videoElement.play().catch((error) => {
-          console.error("Error playing video:", error);
-          toast.error("Failed to play video");
-          setCurrentlyPlaying(null);
+      videoElement.oncanplay = () => {
+        videoElement.play().catch(err => {
+          console.error('Playback failed:', err);
+          toast.error('Playback failed - try clicking play again');
         });
-      }
-    }, 100);
+      };
+    }
   };
 
   const handleStopVideo = (videoId) => {
@@ -122,8 +154,11 @@ const Lectures = () => {
     if (videoElement) {
       videoElement.pause();
       videoElement.currentTime = 0;
+      videoElement.src = '';
     }
-    setCurrentlyPlaying(null);
+    if (currentlyPlaying === videoId) {
+      setCurrentlyPlaying(null);
+    }
   };
 
   const confirmDelete = (videoId) => {
@@ -141,16 +176,14 @@ const Lectures = () => {
 
     try {
       await deleteLecture(videoToDelete);
-      toast.success("Video deleted successfully");
-      setLectures(
-        lectures.filter((lecture) => lecture.VIDEO_ID !== videoToDelete)
-      );
+      toast.success("File deleted successfully");
+      setLectures(lectures.filter((lecture) => lecture.VIDEO_ID !== videoToDelete));
       if (currentlyPlaying === videoToDelete) {
         handleStopVideo(videoToDelete);
       }
     } catch (error) {
-      toast.error("Failed to delete video");
-      console.error("Error deleting video:", error);
+      toast.error("Failed to delete file");
+      console.error("Error deleting file:", error);
     } finally {
       setShowDeleteModal(false);
       setVideoToDelete(null);
@@ -159,6 +192,10 @@ const Lectures = () => {
 
   const handleBack = () => {
     navigate("/teacher-dashboard");
+  };
+
+  const isVideoFile = (fileType) => {
+    return fileType && fileType.startsWith('video/');
   };
 
   if (loading) {
@@ -177,7 +214,7 @@ const Lectures = () => {
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-xl font-semibold mb-4">Confirm Deletion</h3>
             <p className="mb-6">
-              Are you sure you want to delete this video? This action cannot be
+              Are you sure you want to delete this file? This action cannot be
               undone.
             </p>
             <div className="flex justify-end space-x-4">
@@ -244,19 +281,26 @@ const Lectures = () => {
           </div>
 
           <div>
-            <label className="block text-gray-700 mb-2">Video File</label>
+            <label className="block text-gray-700 mb-2">Video/Image File</label>
             <div className="flex items-center">
               <label className="flex flex-col items-center px-4 py-6 bg-white rounded-lg border border-dashed border-gray-300 cursor-pointer hover:bg-gray-50">
                 <img src={videoIcon} alt="Upload" className="w-10 h-10 mb-2" />
-                <span className="text-sm text-gray-600">
-                  {formData.videoFile
-                    ? formData.videoFile.name
-                    : "Click to select video"}
+                <span className="text-sm text-gray-600 text-center">
+                  {formData.videoFile ? (
+                    <div>
+                      <div>{formData.videoFile.name}</div>
+                      <div className="text-xs text-gray-500">
+                        {formatFileSize(formData.videoFile.size)}
+                      </div>
+                    </div>
+                  ) : (
+                    "Click to select video or image (max 1GB)"
+                  )}
                 </span>
                 <input
                   id="videoFile"
                   type="file"
-                  accept="video/*"
+                  accept="video/*,image/*"
                   onChange={handleFileChange}
                   className="hidden"
                   required
@@ -265,6 +309,18 @@ const Lectures = () => {
             </div>
           </div>
 
+          {uploading && (
+            <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div 
+                className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" 
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
+              <p className="text-sm text-gray-600 mt-2">
+                Uploading... {uploadProgress}%
+              </p>
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={uploading}
@@ -272,7 +328,7 @@ const Lectures = () => {
               uploading ? "bg-indigo-400" : "bg-indigo-600 hover:bg-indigo-700"
             } transition`}
           >
-            {uploading ? "Uploading..." : "Upload Lecture"}
+            {uploading ? `Uploading... ${uploadProgress}%` : "Upload File"}
           </button>
         </form>
       </div>
@@ -295,28 +351,19 @@ const Lectures = () => {
                 className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition"
               >
                 <div className="bg-gray-100 p-4 flex flex-col items-center">
-                  {currentlyPlaying === lecture.VIDEO_ID ? (
-                    <div className="w-full relative">
+                  {currentlyPlaying === lecture.VIDEO_ID && isVideoFile(lecture.FILE_TYPE) ? (
+                    <div className="w-full relative bg-black">
                       <video
                         ref={(el) => (videoRefs.current[lecture.VIDEO_ID] = el)}
                         controls
-                        className="w-full"
-                        onError={() => {
-                          toast.error("Failed to play video");
-                          setCurrentlyPlaying(null);
-                        }}
-                        onCanPlay={() => {
-                          // Auto-play when enough data is loaded
-                          videoRefs.current[lecture.VIDEO_ID]
-                            ?.play()
-                            .catch((e) =>
-                              console.log("Autoplay prevented:", e)
-                            );
-                        }}
+                        className="w-full h-auto max-h-64"
+                        preload="auto"
+                        controlsList="nodownload"
+                        playsInline
                       >
-                        <source
-                          src={`/lecture/stream?video_id=${lecture.VIDEO_ID}`}
-                          type={lecture.FILE_TYPE || "video/mp4"}
+                        <source 
+                          src={`/api/lecture/stream?video_id=${lecture.VIDEO_ID}`}
+                          type={lecture.FILE_TYPE || 'video/mp4'}
                         />
                         Your browser does not support the video tag.
                       </video>
@@ -342,18 +389,32 @@ const Lectures = () => {
                     </div>
                   ) : (
                     <>
-                      <img
-                        src={videoIcon}
-                        alt="Video"
-                        className="w-16 h-16 mb-4"
-                      />
+                      {isVideoFile(lecture.FILE_TYPE) ? (
+                        <img
+                          src={videoIcon}
+                          alt="Video"
+                          className="w-16 h-16 mb-4"
+                        />
+                      ) : (
+                        <img
+                          src={`/api/lecture/stream?video_id=${lecture.VIDEO_ID}`}
+                          alt="Image"
+                          className="w-32 h-32 object-cover mb-4 rounded"
+                          onError={(e) => {
+                            e.target.src = videoIcon;
+                            e.target.className = "w-16 h-16 mb-4";
+                          }}
+                        />
+                      )}
                       <div className="flex space-x-2">
-                        <button
-                          onClick={() => handlePlayVideo(lecture.VIDEO_ID)}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                        >
-                          Play
-                        </button>
+                        {isVideoFile(lecture.FILE_TYPE) && (
+                          <button
+                            onClick={() => handlePlayVideo(lecture.VIDEO_ID)}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                          >
+                            Play
+                          </button>
+                        )}
                         <button
                           onClick={() => confirmDelete(lecture.VIDEO_ID)}
                           className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
@@ -376,9 +437,16 @@ const Lectures = () => {
                       Uploaded:{" "}
                       {new Date(lecture.UPLOAD_DATE).toLocaleDateString()}
                     </span>
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
-                      {lecture.FILE_TYPE}
-                    </span>
+                    <div className="flex flex-col items-end">
+                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs mb-1">
+                        {lecture.FILE_TYPE}
+                      </span>
+                      {lecture.FILE_SIZE && (
+                        <span className="text-xs text-gray-400">
+                          {formatFileSize(lecture.FILE_SIZE)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

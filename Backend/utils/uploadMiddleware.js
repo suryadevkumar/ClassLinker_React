@@ -1,9 +1,12 @@
 import multer from 'multer';
 
 const upload = multer({
-  storage: multer.memoryStorage(), // Store files in memory
+  storage: multer.memoryStorage(),
   limits: {
-    fileSize: 1024 * 1024 * 1024
+    fileSize: 1024 * 1024 * 1024, // 1GB limit
+  },
+  fileFilter: (req, file, cb) => {
+    cb(null, true);
   }
 });
 

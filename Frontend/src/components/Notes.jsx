@@ -13,6 +13,7 @@ const Notes = () => {
     const location = useLocation();
     const userType = location.state?.userType;
     const subId = location.state?.subjectId;
+    const subName = location.state?.subjectName;
     const [notes, setNotes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [title, setTitle] = useState("");
@@ -24,7 +25,6 @@ const Notes = () => {
     useEffect(() => {
         const fetchNotes = async () => {
             try {
-                const subName = sessionStorage.getItem("sub_name");
                 if (subName) setSubjectName(subName);
 
                 const notesList = await getNotesList(subId);

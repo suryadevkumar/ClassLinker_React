@@ -1,8 +1,9 @@
 import axios from 'axios';
 
-export const uploadLecture = async (formData) => {
+export const uploadLecture = async (formData, config) => {
     try {
         const response = await axios.post('/lecture/upload', formData, {
+            ...config,
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
@@ -16,7 +17,7 @@ export const uploadLecture = async (formData) => {
 
 export const getLectures = async (sub_id) => {
     try {
-        // Modified to only get metadata, not the actual video files
+        console.log(sub_id)
         const response = await axios.get('/lecture/list', { params: { sub_id } });
         return response.data;
     } catch (error) {
@@ -31,18 +32,6 @@ export const deleteLecture = async (videoId) => {
         return response.data;
     } catch (error) {
         console.error('Error deleting lecture:', error);
-        throw error;
-    }
-};
-
-export const getVideoStream = async (videoId) => {
-    try {
-        const response = await axios.get(`/lecture/stream?video_id=${videoId}`, {
-            responseType: 'blob'
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error streaming video:', error);
         throw error;
     }
 };

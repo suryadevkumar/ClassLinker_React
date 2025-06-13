@@ -28,7 +28,6 @@ const StudentDashboard = () => {
         if (data.verified === "Verified") {
           setIsVerified(true);
           setStudentData(data);
-          sessionStorage.setItem('user_id1', data.std_id);
         }
       } catch (error) {
         toast.error('Failed to load student data');
@@ -43,7 +42,6 @@ const StudentDashboard = () => {
   const handleSubjectSelect = async (modalType) => {
     try {
       const data = await fetchSubjectList();
-      console.log(data);
       setSubjects(data);
       setShowModal(modalType);
     } catch (error) {
@@ -58,24 +56,15 @@ const handleNavigation = (page) => {
     return;
   }
 
-  // No need to find in subjects array since we already have the complete subject
-  sessionStorage.setItem('sub_id', selectedSubject[0]);  // Subject ID
-  sessionStorage.setItem('sub_name', selectedSubject[1]); // Subject name
-
-  console.log('Stored subject:', {
-    id: selectedSubject[0],
-    name: selectedSubject[1]
-  });
-
   switch (page) {
     case 'attendance':
       navigate('/student-attendance-sheet');
       break;
     case 'notes':
-      navigate('/student-notes');
+      navigate('/notes', {state: {subjectId: selectedSubject[0], subjectName: selectedSubject[1]}});
       break;
     case 'assignment':
-      navigate('/student-assignment');
+      navigate('/student/assignment', {state: {studentId: studentData.std_id, subjectId: selectedSubject[0], subjectName: selectedSubject[1]}});
       break;
     case 'chat':
       navigate('/chat-student');
