@@ -194,24 +194,22 @@ export const downloadSubmittedAssignment = async (req, res) => {
 };
 
 export const getSubmittedAssignments = async (req, res) => {
-  const { sub_id } = req.query;
+  const { assignmentId } = req.query;
 
   try {
     const result = await db.execute(
       `SELECT 
         s.submit_id,
-        s.std_id,
+        st.sch_id,
         st.std_name,
-        a.as_name,
         s.submit_date,
         s.grade,
         s.feedback
       FROM std_assignment_submit s
-      JOIN assignment a ON s.as_id = a.as_id
       JOIN student st ON s.std_id = st.std_id
-      WHERE a.sub_id = :sub_id
-      ORDER BY s.submit_date DESC`,
-      { sub_id }
+      WHERE s.as_id = :assignmentId
+      ORDER BY st.sch_id ASC`,
+      { assignmentId }
     );
     res.json(result.rows);
   } catch (err) {

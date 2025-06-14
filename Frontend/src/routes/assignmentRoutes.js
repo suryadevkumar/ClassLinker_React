@@ -104,9 +104,9 @@ export const downloadSubmittedAssignment = async (submitId) => {
   }
 };
 
-export const getSubmittedAssignments = async (sub_id) => {
+export const getSubmittedAssignments = async (assignmentId) => {
   try {
-    const response = await axios.get('/assignment/getSubmittedAssignments', { params: { sub_id } });
+    const response = await axios.get('/assignment/getSubmittedAssignments', { params: { assignmentId } });
     return response.data;
   } catch (error) {
     console.error('Error fetching submitted assignments:', error);

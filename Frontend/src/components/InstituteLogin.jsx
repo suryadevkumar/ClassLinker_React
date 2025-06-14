@@ -72,7 +72,6 @@ const InstituteLogin = () => {
     }
     const response = await verifyOtp(email, OTP);
     if (response.success) {
-      localStorage.removeItem("userType");
       navigate("/instituteDashboard");
     } else return toast.error(response.message);
   };

@@ -50,41 +50,36 @@ const StudentDashboard = () => {
   };
 
   // Handle navigation to different pages
-const handleNavigation = (page) => {
-  if (!selectedSubject) {
-    toast.error('Please select a subject');
-    return;
-  }
+  const handleNavigation = (page) => {
+    if (!selectedSubject) {
+      toast.error('Please select a subject');
+      return;
+    }
 
-  switch (page) {
-    case 'attendance':
-      navigate('/student/attendance', {state: {subjectId: selectedSubject[0], subjectName: selectedSubject[1]}});
-      break;
-    case 'notes':
-      navigate('/notes', {state: {subjectId: selectedSubject[0], subjectName: selectedSubject[1]}});
-      break;
-    case 'assignment':
-      navigate('/student/assignment', {state: {studentId: studentData.std_id, subjectId: selectedSubject[0], subjectName: selectedSubject[1]}});
-      break;
-    case 'chat':
-      navigate('/chat-student');
-      break;
-    case 'lectures':
-      navigate('/student-lectures');
-      break;
-    default:
-      break;
-  }
+    switch (page) {
+      case 'attendance':
+        navigate('/student/attendance', { state: { subjectId: selectedSubject[0], subjectName: selectedSubject[1] } });
+        break;
+      case 'notes':
+        navigate('/notes', { state: { subjectId: selectedSubject[0], subjectName: selectedSubject[1] } });
+        break;
+      case 'assignment':
+        navigate('/assignment', { state: {userType:"student", studentId: studentData.std_id, subjectId: selectedSubject[0], subjectName: selectedSubject[1] } });
+        break;
+      case 'chat':
+        navigate('/chat-student');
+        break;
+      case 'lectures':
+        navigate("/lecture", { state: {userType:"student", subjectId: selectedSubject[0], subjectName: selectedSubject[1] } });
+        break;
+      default:
+        break;
+    }
 
-  setShowModal(null);
-  setSelectedSubject(null);
-};
-
-  // Handle logout
-  const handleLogout = () => {
-    sessionStorage.clear();
-    navigate('/student-login');
+    setShowModal(null);
+    setSelectedSubject(null);
   };
+
 
   if (loading) {
     return (
@@ -96,7 +91,7 @@ const handleNavigation = (page) => {
 
   if (!isVerified) {
     return (
-      <UnverifiedCard/>
+      <UnverifiedCard />
     );
   }
 
@@ -108,14 +103,14 @@ const handleNavigation = (page) => {
         {/* Profile Info */}
         <div className="bg-white rounded-lg shadow-md p-6 w-full md:w-1/2">
           <div className="text-center">
-            <img 
-              src={`data:image/jpeg;base64,${studentData.std_pic}`} 
-              alt="Profile" 
+            <img
+              src={`data:image/jpeg;base64,${studentData.std_pic}`}
+              alt="Profile"
               className="w-40 h-40 rounded-full mx-auto mb-4 object-cover"
             />
             <h2 className="text-2xl font-bold">{studentData.std_name}</h2>
           </div>
-          
+
           <div className="mt-6 space-y-3">
             <p><span className="font-semibold">Scholar ID:</span> {studentData.sch_id}</p>
             <p><span className="font-semibold">College Name:</span> {studentData.ins_name}</p>
@@ -130,7 +125,7 @@ const handleNavigation = (page) => {
 
         {/* Menu Options */}
         <div className="w-full md:w-1/2 grid grid-cols-1 gap-4">
-          <div 
+          <div
             className="bg-white rounded-lg shadow-md p-4 flex items-center cursor-pointer hover:bg-gray-50 transition"
             onClick={() => handleSubjectSelect('attendance')}
           >
@@ -138,7 +133,7 @@ const handleNavigation = (page) => {
             <h2 className="text-xl font-semibold">View Attendance</h2>
           </div>
 
-          <div 
+          <div
             className="bg-white rounded-lg shadow-md p-4 flex items-center cursor-pointer hover:bg-gray-50 transition"
             onClick={() => handleSubjectSelect('notes')}
           >
@@ -146,7 +141,7 @@ const handleNavigation = (page) => {
             <h2 className="text-xl font-semibold">Download Notes</h2>
           </div>
 
-          <div 
+          <div
             className="bg-white rounded-lg shadow-md p-4 flex items-center cursor-pointer hover:bg-gray-50 transition"
             onClick={() => handleSubjectSelect('lectures')}
           >
@@ -154,7 +149,7 @@ const handleNavigation = (page) => {
             <h2 className="text-xl font-semibold">Watch Lectures</h2>
           </div>
 
-          <div 
+          <div
             className="bg-white rounded-lg shadow-md p-4 flex items-center cursor-pointer hover:bg-gray-50 transition"
             onClick={() => handleSubjectSelect('assignment')}
           >
@@ -162,7 +157,7 @@ const handleNavigation = (page) => {
             <h2 className="text-xl font-semibold">Download Assignments</h2>
           </div>
 
-          <div 
+          <div
             className="bg-white rounded-lg shadow-md p-4 flex items-center cursor-pointer hover:bg-gray-50 transition"
             onClick={() => handleSubjectSelect('chat')}
           >
@@ -171,7 +166,7 @@ const handleNavigation = (page) => {
           </div>
 
           <Link to="/changePassword"
-                  state={{ userType: "Student" }} 
+            state={{ userType: "Student" }}
             className="bg-white rounded-lg shadow-md p-4 flex items-center cursor-pointer hover:bg-gray-50 transition"
           >
             <img src={changePass} alt="Change Password" className="w-16 h-16 mr-4" />
@@ -185,7 +180,7 @@ const handleNavigation = (page) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">Select Subject</h2>
-            
+
             <select
               className="w-full p-2 border rounded mb-4"
               value={selectedSubject}

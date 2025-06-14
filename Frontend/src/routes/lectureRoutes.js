@@ -17,7 +17,6 @@ export const uploadLecture = async (formData, config) => {
 
 export const getLectures = async (sub_id) => {
     try {
-        console.log(sub_id)
         const response = await axios.get('/lecture/list', { params: { sub_id } });
         return response.data;
     } catch (error) {

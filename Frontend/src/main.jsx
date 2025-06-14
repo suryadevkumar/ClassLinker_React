@@ -30,9 +30,7 @@ import AdminCredentials from './components/AdminCredentials.jsx';
 import MarkAttendance from './components/MarkAttendance.jsx';
 import Notes from './components/Notes.jsx';
 import Assignment from './components/Assignment.jsx';
-import SubmitAssignmentView from './components/SubmitAssignmentView.jsx';
 import Lectures from './components/Lecture.jsx';
-import StudentAssignment from './components/StudentAssignment.jsx';
 import StudentAttendance from './components/StudentAttendance.jsx';
 
 initializeSocket();
@@ -153,16 +151,8 @@ const appRouter = createBrowserRouter([
         element: <Assignment/>
       },
       {
-        path: "/view/assignment",
-        element: <SubmitAssignmentView/>
-      },
-      {
         path: "/lecture",
         element: <Lectures/>
-      },
-      {
-        path: "/student/assignment",
-        element: <StudentAssignment/>
       },
       {
         path: "/student/attendance",

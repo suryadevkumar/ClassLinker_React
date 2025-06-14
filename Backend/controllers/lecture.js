@@ -10,8 +10,20 @@ export const uploadLecture = async (req, res) => {
         return res.status(400).json({ error: 'No video file uploaded' });
     }
 
+    if (!videoFile.length || videoFile.length === 0) {
+        return res.status(400).json({ error: 'Empty file uploaded' });
+    }
+
+    // Ensure we have the file size
+    const fileSize = videoFile.length;
+    
+    if (!fileSize) {
+        return res.status(400).json({ error: 'Could not determine file size' });
+    }
+
     try {
-        await db.execute(
+        
+        const result = await db.execute(
             `INSERT INTO SUBJECT_VIDEO (
                 VIDEO_ID, SUB_ID, VIDEO_TITLE, 
                 VIDEO_FILE, FILE_TYPE, UPLOAD_DATE, DESCRIPTION, FILE_SIZE
@@ -20,20 +32,42 @@ export const uploadLecture = async (req, res) => {
                 :videoFile, :fileType, SYSDATE, :description, :fileSize
             )`,
             {
-                sub_id,
-                title,
+                sub_id: parseInt(sub_id),
+                title: title,
                 videoFile: { val: videoFile, type: oracledb.BLOB },
-                fileType,
+                fileType: fileType,
                 description: description || null,
-                fileSize: videoFile.length
+                fileSize: fileSize
             },
             { autoCommit: true }
         );
 
-        res.json({ success: true, message: 'Lecture uploaded successfully' });
+        // Verify the insertion by checking what was actually stored
+        const verifyResult = await db.execute(
+            `SELECT VIDEO_ID, FILE_SIZE FROM SUBJECT_VIDEO 
+             WHERE SUB_ID = :sub_id AND VIDEO_TITLE = :title 
+             ORDER BY UPLOAD_DATE DESC`,
+            { sub_id: parseInt(sub_id), title: title }
+        );
+
+        res.json({ 
+            success: true, 
+            message: 'Lecture uploaded successfully',
+            fileSize: fileSize,
+            videoId: verifyResult.rows.length > 0 ? verifyResult.rows[0][0] : null
+        });
+        
     } catch (err) {
         console.error('Error uploading lecture:', err);
-        res.status(500).json({ error: 'Failed to upload lecture' });
+        console.error('Error details:', {
+            code: err.code,
+            message: err.message,
+            offset: err.offset
+        });
+        res.status(500).json({ 
+            error: 'Failed to upload lecture',
+            details: err.message 
+        });
     }
 };
 
@@ -98,14 +132,13 @@ export const streamVideo = async (req, res) => {
 
         const videoBlob = result.rows[0][0];
         const fileType = result.rows[0][1] || 'video/mp4';
-        const fileSize = result.rows[0][2] || await videoBlob.getLength();
+        let fileSize = result.rows[0][2];
 
-        // Set proper headers for video streaming
+        // Set headers
         res.setHeader('Content-Type', fileType);
-        res.setHeader('Accept-Ranges', 'bytes');
         res.setHeader('Cache-Control', 'public, max-age=3600');
         res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Content-Disposition', 'inline');
+        res.setHeader('Accept-Ranges', 'bytes');
 
         const range = req.headers.range;
         
@@ -113,63 +146,90 @@ export const streamVideo = async (req, res) => {
             const parts = range.replace(/bytes=/, "").split("-");
             const start = parseInt(parts[0], 10);
             const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-            const chunkSize = (end - start) + 1;
-
-            if (start >= fileSize || end >= fileSize) {
-                res.status(416).setHeader('Content-Range', `bytes */${fileSize}`);
-                return res.end();
+            
+            if (start >= fileSize) {
+                return res.status(416)
+                    .setHeader('Content-Range', `bytes */${fileSize}`)
+                    .end();
             }
-
+            
+            const chunkSize = (end - start) + 1;
+            
             res.writeHead(206, {
                 'Content-Range': `bytes ${start}-${end}/${fileSize}`,
                 'Content-Length': chunkSize,
                 'Content-Type': fileType
             });
-
-            try {
-                const chunk = await new Promise((resolve, reject) => {
-                    const chunks = [];
-                    const blobStream = videoBlob.createReadStream({ 
-                        offset: start + 1,
-                        length: chunkSize 
+            
+            // Use smaller chunks for better memory management
+            const chunkSizeToRead = 1024 * 256; // 256KB chunks
+            let bytesRead = 0;
+            
+            while (bytesRead < chunkSize) {
+                const currentStart = start + bytesRead;
+                const currentEnd = Math.min(currentStart + chunkSizeToRead - 1, end);
+                const currentChunkSize = currentEnd - currentStart + 1;
+                
+                try {
+                    const chunk = await new Promise((resolve, reject) => {
+                        videoBlob.getData(currentStart + 1, currentChunkSize, (err, data) => {
+                            if (err) reject(err);
+                            else resolve(data);
+                        });
                     });
                     
-                    blobStream.on('data', (data) => chunks.push(data));
-                    blobStream.on('end', () => resolve(Buffer.concat(chunks)));
-                    blobStream.on('error', reject);
-                });
-
-                res.end(chunk);
-            } catch (streamError) {
-                console.error('Error streaming chunk:', streamError);
-                if (!res.headersSent) {
-                    res.status(500).end();
+                    if (!res.write(chunk)) {
+                        // Handle backpressure
+                        await new Promise(resolve => res.once('drain', resolve));
+                    }
+                    bytesRead += currentChunkSize;
+                } catch (chunkError) {
+                    console.error('Error streaming BLOB chunk:', chunkError);
+                    res.end();
+                    return;
                 }
             }
-        } else {
-            res.setHeader('Content-Length', fileSize);
             
-            try {
-                const fullStream = videoBlob.createReadStream();
-                fullStream.pipe(res);
-                
-                fullStream.on('error', (streamError) => {
-                    console.error('Error streaming full video:', streamError);
-                    if (!res.headersSent) {
-                        res.status(500).end();
-                    }
+            res.end();
+            return;
+        }
+        
+        // For non-range requests (should be avoided for large files)
+        try {
+            const fullData = await new Promise((resolve, reject) => {
+                videoBlob.getData(1, fileSize || undefined, (err, data) => {
+                    if (err) reject(err);
+                    else resolve(data);
                 });
-            } catch (streamError) {
-                console.error('Error creating stream:', streamError);
-                if (!res.headersSent) {
-                    res.status(500).json({ error: 'Error streaming video' });
-                }
+            });
+
+            if (!fileSize || fileSize <= 0) {
+                fileSize = fullData.length;
+                await db.execute(
+                    `UPDATE SUBJECT_VIDEO SET FILE_SIZE = :fileSize WHERE VIDEO_ID = :video_id`,
+                    { fileSize, video_id },
+                    { autoCommit: true }
+                );
+            }
+
+            res.setHeader('Content-Length', fileSize);
+            res.end(fullData);
+        } catch (streamError) {
+            console.error('Error streaming full file:', streamError);
+            if (!res.headersSent) {
+                res.status(500).json({ 
+                    error: 'Failed to stream video',
+                    details: streamError.message 
+                });
             }
         }
     } catch (err) {
-        console.error('Error streaming video:', err);
+        console.error('Error in streamVideo:', err);
         if (!res.headersSent) {
-            res.status(500).json({ error: 'Error streaming video' });
+            res.status(500).json({ 
+                error: 'Database error while streaming video',
+                details: err.message 
+            });
         }
     }
 };

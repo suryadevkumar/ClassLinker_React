@@ -6,7 +6,7 @@ import {
   getLectures,
   deleteLecture,
 } from "../routes/lectureRoutes";
-import videoIcon from "../assets/img/video.png";
+import videoIcon from "../assets/img/video1.png";
 
 const Lectures = () => {
   const [lectures, setLectures] = useState([]);
@@ -14,6 +14,7 @@ const Lectures = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
+  const [videoLoading, setVideoLoading] = useState({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [videoToDelete, setVideoToDelete] = useState(null);
   const videoRefs = useRef({});
@@ -22,9 +23,12 @@ const Lectures = () => {
     description: "",
     videoFile: null,
   });
+
   const navigate = useNavigate();
   const location = useLocation();
   const sub_id = location.state?.subjectId;
+  const subjectName = location.state?.subjectName;
+  const userType = location.state?.userType;
 
   useEffect(() => {
     const loadLectures = async () => {
@@ -40,21 +44,32 @@ const Lectures = () => {
     };
 
     loadLectures();
-  }, [sub_id, navigate]);
+
+    return () => {
+      // Clean up video refs and stop any playing videos
+      Object.values(videoRefs.current).forEach((video) => {
+        if (video) {
+          video.pause();
+          video.src = "";
+        }
+      });
+      videoRefs.current = {};
+    };
+  }, [sub_id]);
 
   const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i]);
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2) + " " + sizes[i]);
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (!file.type.startsWith('video/') && !file.type.startsWith('image/')) {
-        toast.error('Please select a video or image file');
+      if (!file.type.startsWith("video/") && !file.type.startsWith("image/")) {
+        toast.error("Please select a video or image file");
         return;
       }
       setFormData({
@@ -122,43 +137,105 @@ const Lectures = () => {
     }
   };
 
-  const handlePlayVideo = (videoId) => {
+  const handlePlayVideo = async (videoId) => {
     if (currentlyPlaying && currentlyPlaying !== videoId) {
       handleStopVideo(currentlyPlaying);
     }
-    
-    setCurrentlyPlaying(videoId);
-    const videoElement = videoRefs.current[videoId];
-    
-    if (videoElement) {
-      videoElement.src = `/lecture/stream?video_id=${videoId}`;
-      videoElement.load();
-      
-      videoElement.onerror = () => {
-        console.error('Video error:', videoElement.error);
-        toast.error('Failed to play video');
-        setCurrentlyPlaying(null);
-      };
 
-      videoElement.oncanplay = () => {
-        videoElement.play().catch(err => {
-          console.error('Playback failed:', err);
-          toast.error('Playback failed - try clicking play again');
-        });
-      };
+    setVideoLoading((prev) => ({ ...prev, [videoId]: true }));
+    setCurrentlyPlaying(videoId);
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    const videoElement = videoRefs.current[videoId];
+    if (!videoElement) {
+      console.error("Video element not found for ID:", videoId);
+      toast.error("Video player not ready - please try again");
+      setVideoLoading((prev) => ({ ...prev, [videoId]: false }));
+      return;
     }
+
+    // Clear existing source and events
+    videoElement.src = "";
+    videoElement.load();
+
+    // Set up new event handlers
+    const errorHandler = () => {
+      console.error("Video playback failed", videoElement.error);
+      toast.error("Failed to play video");
+      setCurrentlyPlaying(null);
+      setVideoLoading((prev) => ({ ...prev, [videoId]: false }));
+    };
+
+    const canPlayHandler = () => {
+      videoElement.play().catch((err) => {
+        console.error("Playback failed:", err);
+        toast.error("Playback failed - try clicking play again");
+        setVideoLoading((prev) => ({ ...prev, [videoId]: false }));
+        setCurrentlyPlaying(null);
+      });
+    };
+
+    const waitingHandler = () => {
+      setVideoLoading((prev) => ({ ...prev, [videoId]: true }));
+    };
+
+    const playingHandler = () => {
+      setVideoLoading((prev) => ({ ...prev, [videoId]: false }));
+    };
+
+    videoElement.addEventListener("error", errorHandler);
+    videoElement.addEventListener("canplay", canPlayHandler);
+    videoElement.addEventListener("waiting", waitingHandler);
+    videoElement.addEventListener("playing", playingHandler);
+
+    // Store handlers for cleanup
+    videoElement._eventHandlers = {
+      error: errorHandler,
+      canplay: canPlayHandler,
+      waiting: waitingHandler,
+      playing: playingHandler,
+    };
+
+    // Set new source
+    const lecture = lectures.find((l) => l.VIDEO_ID === videoId);
+    const videoUrl = `http://localhost:3000/api/lecture/stream?video_id=${videoId}`;
+
+    videoElement.preload = "auto";
+    videoElement.src = videoUrl;
+
+    if (lecture && lecture.FILE_TYPE) {
+      videoElement.type = lecture.FILE_TYPE;
+    }
+
+    videoElement.load();
   };
 
+  // Also update the handleStopVideo function to ensure proper cleanup
   const handleStopVideo = (videoId) => {
     const videoElement = videoRefs.current[videoId];
     if (videoElement) {
+      // Clean up event listeners
+      if (videoElement._eventHandlers) {
+        Object.entries(videoElement._eventHandlers).forEach(
+          ([event, handler]) => {
+            videoElement.removeEventListener(event, handler);
+          }
+        );
+        delete videoElement._eventHandlers;
+      }
+
       videoElement.pause();
       videoElement.currentTime = 0;
-      videoElement.src = '';
+      videoElement.src = "";
+      videoElement.load();
     }
+
     if (currentlyPlaying === videoId) {
       setCurrentlyPlaying(null);
     }
+
+    setVideoLoading((prev) => ({ ...prev, [videoId]: false }));
   };
 
   const confirmDelete = (videoId) => {
@@ -177,7 +254,9 @@ const Lectures = () => {
     try {
       await deleteLecture(videoToDelete);
       toast.success("File deleted successfully");
-      setLectures(lectures.filter((lecture) => lecture.VIDEO_ID !== videoToDelete));
+      setLectures(
+        lectures.filter((lecture) => lecture.VIDEO_ID !== videoToDelete)
+      );
       if (currentlyPlaying === videoToDelete) {
         handleStopVideo(videoToDelete);
       }
@@ -191,12 +270,22 @@ const Lectures = () => {
   };
 
   const handleBack = () => {
-    navigate("/teacher-dashboard");
+    navigate(`/${userType}Dashboard`);
   };
 
   const isVideoFile = (fileType) => {
-    return fileType && fileType.startsWith('video/');
+    return fileType && fileType.startsWith("video/");
   };
+
+  // Loading Spinner Component
+  const LoadingSpinner = () => (
+    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10">
+      <div className="flex flex-col items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+        <p className="text-white mt-2 text-sm">Loading video...</p>
+      </div>
+    </div>
+  );
 
   if (loading) {
     return (
@@ -243,11 +332,11 @@ const Lectures = () => {
         >
           Back
         </button>
-        <h1 className="text-3xl font-bold text-gray-800">Manage Lectures</h1>
+        <h1 className="text-3xl font-bold text-gray-800">{userType==='teacher'?"Manage Lectures":`Subject: ${subjectName}`}</h1>
       </div>
 
       {/* Upload Form */}
-      <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+      {userType==='teacher' && <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">
           Upload New Lecture
         </h2>
@@ -311,8 +400,8 @@ const Lectures = () => {
 
           {uploading && (
             <div className="w-full bg-gray-200 rounded-full h-2.5">
-              <div 
-                className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" 
+              <div
+                className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300"
                 style={{ width: `${uploadProgress}%` }}
               ></div>
               <p className="text-sm text-gray-600 mt-2">
@@ -331,7 +420,7 @@ const Lectures = () => {
             {uploading ? `Uploading... ${uploadProgress}%` : "Upload File"}
           </button>
         </form>
-      </div>
+      </div>}
 
       {/* Lectures List */}
       <div className="bg-white rounded-xl shadow-lg p-6">
@@ -351,25 +440,31 @@ const Lectures = () => {
                 className="border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition"
               >
                 <div className="bg-gray-100 p-4 flex flex-col items-center">
-                  {currentlyPlaying === lecture.VIDEO_ID && isVideoFile(lecture.FILE_TYPE) ? (
+                  {currentlyPlaying === lecture.VIDEO_ID &&
+                  isVideoFile(lecture.FILE_TYPE) ? (
                     <div className="w-full relative bg-black">
+                      {/* Loading Spinner Overlay */}
+                      {videoLoading[lecture.VIDEO_ID] && <LoadingSpinner />}
+
                       <video
-                        ref={(el) => (videoRefs.current[lecture.VIDEO_ID] = el)}
+                        ref={(el) => {
+                          if (el) {
+                            videoRefs.current[lecture.VIDEO_ID] = el;
+                          } else {
+                            delete videoRefs.current[lecture.VIDEO_ID];
+                          }
+                        }}
                         controls
                         className="w-full h-auto max-h-64"
-                        preload="auto"
+                        preload="metadata"
                         controlsList="nodownload"
                         playsInline
                       >
-                        <source 
-                          src={`/api/lecture/stream?video_id=${lecture.VIDEO_ID}`}
-                          type={lecture.FILE_TYPE || 'video/mp4'}
-                        />
                         Your browser does not support the video tag.
                       </video>
                       <button
                         onClick={() => handleStopVideo(lecture.VIDEO_ID)}
-                        className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-70"
+                        className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-70 z-20"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -397,7 +492,7 @@ const Lectures = () => {
                         />
                       ) : (
                         <img
-                          src={`/api/lecture/stream?video_id=${lecture.VIDEO_ID}`}
+                          src={`http://localhost:3000/api/lecture/stream?video_id=${lecture.VIDEO_ID}`}
                           alt="Image"
                           className="w-32 h-32 object-cover mb-4 rounded"
                           onError={(e) => {
@@ -406,32 +501,43 @@ const Lectures = () => {
                           }}
                         />
                       )}
-                      <div className="flex space-x-2">
-                        {isVideoFile(lecture.FILE_TYPE) && (
-                          <button
-                            onClick={() => handlePlayVideo(lecture.VIDEO_ID)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                          >
-                            Play
-                          </button>
-                        )}
-                        <button
-                          onClick={() => confirmDelete(lecture.VIDEO_ID)}
-                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-                        >
-                          Delete
-                        </button>
-                      </div>
                     </>
                   )}
                 </div>
                 <div className="p-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                    {lecture.VIDEO_TITLE}
-                  </h3>
-                  <p className="text-gray-600 mb-3">
-                    {lecture.DESCRIPTION || "No description"}
-                  </p>
+                  <div className="flex justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                        {lecture.VIDEO_TITLE}
+                      </h3>
+                      <p className="text-gray-600 mb-3">
+                        {lecture.DESCRIPTION || "No description"}
+                      </p>
+                    </div>
+                    <div className="flex space-x-2">
+                      {isVideoFile(lecture.FILE_TYPE) && (
+                        <button
+                          onClick={() => handlePlayVideo(lecture.VIDEO_ID)}
+                          disabled={videoLoading[lecture.VIDEO_ID]}
+                          className={`px-4 my-4 rounded-lg text-white transition ${
+                            videoLoading[lecture.VIDEO_ID]
+                              ? "bg-blue-400 cursor-not-allowed"
+                              : "bg-blue-600 hover:bg-blue-700"
+                          }`}
+                        >
+                          {videoLoading[lecture.VIDEO_ID]
+                            ? "Loading..."
+                            : "Play"}
+                        </button>
+                      )}
+                      {userType==='teacher' && <button
+                        onClick={() => confirmDelete(lecture.VIDEO_ID)}
+                        className="px-4 my-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                      >
+                        Delete
+                      </button>}
+                    </div>
+                  </div>
                   <div className="flex justify-between items-center text-sm text-gray-500">
                     <span>
                       Uploaded:{" "}
@@ -439,13 +545,13 @@ const Lectures = () => {
                     </span>
                     <div className="flex flex-col items-end">
                       <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs mb-1">
-                        {lecture.FILE_TYPE}
+                        {lecture.FILE_TYPE} {" "}
+                        {lecture.FILE_SIZE && (
+                          <span className="text-xs text-gray-800">
+                            {formatFileSize(lecture.FILE_SIZE)} MB
+                          </span>
+                        )}
                       </span>
-                      {lecture.FILE_SIZE && (
-                        <span className="text-xs text-gray-400">
-                          {formatFileSize(lecture.FILE_SIZE)}
-                        </span>
-                      )}
                     </div>
                   </div>
                 </div>
