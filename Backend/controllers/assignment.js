@@ -97,7 +97,6 @@ export const submitAssignment = async (req, res) => {
   const std_id = req.session.std_id;
   const pdfFile = req.file?.buffer;
   const fileType = req.file?.mimetype;
-  console.log(as_id, std_id)
 
   try {
     // Check if already submitted

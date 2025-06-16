@@ -67,7 +67,7 @@ const StudentDashboard = () => {
         navigate('/assignment', { state: {userType:"student", studentId: studentData.std_id, subjectId: selectedSubject[0], subjectName: selectedSubject[1] } });
         break;
       case 'chat':
-        navigate('/chat-student');
+        navigate("/chat", { state: {userType:"student", subjectId: selectedSubject[0], userName: studentData.std_name, userId: studentData.std_id} });
         break;
       case 'lectures':
         navigate("/lecture", { state: {userType:"student", subjectId: selectedSubject[0], subjectName: selectedSubject[1] } });

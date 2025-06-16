@@ -70,7 +70,7 @@ const TeacherDashboard = () => {
         });
         break;
       case "chat":
-        navigate("/chat");
+        navigate("/chat", { state: {userType:"teacher", subjectId: selectedSubject, userName: teacherData.tch_name, userId: teacherData.tch_id} });
         break;
       case "lectures":
         navigate("/lecture", { state: {userType:"teacher", subjectId: selectedSubject } });
@@ -113,7 +113,7 @@ const TeacherDashboard = () => {
           <div className="mt-6 space-y-3">
             <p>
               <span className="font-semibold">Teacher ID:</span>{" "}
-              {teacherData.tch_id}
+              {teacherData.tch_code}
             </p>
             <p>
               <span className="font-semibold">College Name:</span>{" "}

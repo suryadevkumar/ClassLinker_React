@@ -113,6 +113,7 @@ export const studentDetailsFetch = async (req, res) => {
         req.session.std_id = stdId;
         req.session.userID = stdId;
         req.session.userName = stdName;
+        req.session.userTame = "student";
         const result1 = await db.execute(
             `SELECT ins_name, dep_name, crs_name, cls_name, section FROM class_view WHERE idcc_id = :idcc`,
             { idcc: idcc }

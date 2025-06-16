@@ -484,7 +484,7 @@ const Assignment = () => {
                         </div>
                       </div>
 
-                      {userType === "student" && (
+                      {userType === "student" && studentSubmissions[assignment[0]].length == 0 && (
                         <div className="mt-4 border-t pt-4">
                           <h4 className="font-medium mb-2">Submit Your Work</h4>
                           <div className="flex flex-col sm:flex-row gap-4">
@@ -525,8 +525,8 @@ const Assignment = () => {
                                             submission[1],
                                             assignment[2]
                                           )
-                                              ? "text-green-500"
-                                              : "text-red-500"
+                                            ? "text-green-500"
+                                            : "text-red-500"
                                             }`}
                                           title={
                                             isSubmissionOnTime(
@@ -644,8 +644,8 @@ const Assignment = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             <FaStar
                               className={`text-lg ${isSubmissionOnTime(submission[3])
-                                  ? "text-green-500"
-                                  : "text-red-500"
+                                ? "text-green-500"
+                                : "text-red-500"
                                 }`}
                               title={
                                 isSubmissionOnTime(submission[3])

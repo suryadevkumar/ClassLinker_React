@@ -64,6 +64,7 @@ export const teacherDetailsFetch = async (req, res) => {
         req.session.teacher_id=tch_id;
         req.session.userID=tch_id;
         req.session.userName=tchName;
+        req.session.userTame = "teacher";
         const result1 = await db.execute(
             `SELECT ins_name FROM institute WHERE ins_id = :insId`,
             { insId: insId }
@@ -74,9 +75,9 @@ export const teacherDetailsFetch = async (req, res) => {
         const base64AdPic = await handleLob(tchPic);
 
         res.json({
-            user_id: tch_id,
+            tch_id: tch_id,
             tch_name: tchName,
-            tch_id: tchId,
+            tch_code: tchId,
             tch_email: tchEmail,
             tch_mobile: tchMobile,
             tch_pic: base64AdPic,

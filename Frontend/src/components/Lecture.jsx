@@ -370,7 +370,7 @@ const Lectures = () => {
           </div>
 
           <div>
-            <label className="block text-gray-700 mb-2">Video/Image File</label>
+            <label className="block text-gray-700 mb-2">Video File</label>
             <div className="flex items-center">
               <label className="flex flex-col items-center px-4 py-6 bg-white rounded-lg border border-dashed border-gray-300 cursor-pointer hover:bg-gray-50">
                 <img src={videoIcon} alt="Upload" className="w-10 h-10 mb-2" />
@@ -383,13 +383,13 @@ const Lectures = () => {
                       </div>
                     </div>
                   ) : (
-                    "Click to select video or image (max 1GB)"
+                    "Click to select video (max 1GB)"
                   )}
                 </span>
                 <input
                   id="videoFile"
                   type="file"
-                  accept="video/*,image/*"
+                  accept="video/*"
                   onChange={handleFileChange}
                   className="hidden"
                   required
