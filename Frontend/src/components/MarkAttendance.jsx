@@ -12,7 +12,6 @@ import { useLocation } from "react-router-dom";
 
 const MarkAttendance = () => {
   const [subId, setSubId] = useState(null);
-  const [idccId, setIdccId] = useState("");
   const [subDetails, setSubDetails] = useState("");
   const [students, setStudents] = useState([]);
   const [currentStudentIndex, setCurrentStudentIndex] = useState(0);
@@ -48,7 +47,6 @@ const MarkAttendance = () => {
         setSubDetails(
           `${details[0][0]}, ${details[0][1]}, ${details[0][2]}, ${details[0][3]}`
         );
-        setIdccId(details[0][4]);
 
         // Fetch student details
         const studentData = await getStudentDetails();
@@ -217,7 +215,7 @@ const MarkAttendance = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <div className="flex justify-center items-center min-h-[calc(100vh-8rem)] bg-gray-100">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
@@ -225,7 +223,7 @@ const MarkAttendance = () => {
 
   if (!subId) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <div className="flex justify-center items-center min-h-[calc(100vh-8rem)] bg-gray-100">
         <div className="text-center p-6 bg-white rounded-lg shadow-md">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">
             No Subject Selected
@@ -239,11 +237,11 @@ const MarkAttendance = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-[calc(100vh-8rem)] flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Main Content */}
-      <main className="flex-grow container mx-auto px-4 py-6">
+      <main className="flex-grow container mx-auto px-4 py-2">
         {/* Heading */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
           <h2 className="text-xl font-semibold text-gray-800 text-center">
             Attendance Sheet (
             <span className="text-indigo-600">{subDetails}</span>)
@@ -257,7 +255,7 @@ const MarkAttendance = () => {
             {selectedStudent && (
               <div className="bg-white rounded-xl shadow-md overflow-hidden">
                 {/* Student Image */}
-                <div className="flex justify-center p-6">
+                <div className="flex justify-center p-2">
                   <img
                     src={`data:image/png;base64,${selectedStudent.std_pic}`}
                     alt="Student"
@@ -299,9 +297,9 @@ const MarkAttendance = () => {
                   </div>
 
                   {/* Attendance Circle */}
-                  <div className="mt-6 flex flex-col items-center">
+                  <div className="mt-3 flex flex-col items-center">
                     <div
-                      className={`w-32 h-32 rounded-full border-4 flex flex-col items-center justify-center mb-3
+                      className={`w-28 h-28 rounded-full border-4 flex flex-col items-center justify-center mb-1
                         ${
                           selectedStudent.attendancePercentage < 75
                             ? "border-red-500 text-red-500"
@@ -318,7 +316,7 @@ const MarkAttendance = () => {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="mt-6 flex justify-between gap-3">
+                  <div className="mt-2 flex justify-between gap-3">
                     <button
                       onClick={() => handleMarkAttendance("Present")}
                       disabled={selectedStudent.status === "Present"}

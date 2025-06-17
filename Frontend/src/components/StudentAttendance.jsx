@@ -64,7 +64,7 @@ const StudentAttendance = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <div className="flex justify-center items-center min-h-[calc(100vh-8rem)] pt-20 bg-gray-100">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
@@ -76,10 +76,10 @@ const StudentAttendance = () => {
     : 0;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-[calc(100vh-8rem)] flex flex-col bg-gradient-to-br from-blue-50 to-indigo-100">
 
       {/* Main Content */}
-      <main className="flex-grow container mx-auto px-4 py-6">
+      <main className="flex-grow container mx-auto px-4 py-4">
         {/* Heading */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
           <h2 className="text-xl font-semibold text-gray-800 text-center">

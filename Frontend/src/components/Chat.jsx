@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useChat } from "../utils/useChat";
 import { useLocation } from "react-router-dom";
 import { getSocket } from "../utils/socket";
+import { FaPaperPlane, FaEllipsisH, FaUser, FaUserTie, FaUserGraduate } from "react-icons/fa";
 
 const Chat = () => {
   const location = useLocation();
@@ -24,7 +25,6 @@ const Chat = () => {
   useEffect(() => {
     const socket = getSocket();
     
-    // Listen for connection events
     socket.on('connect', () => {
       console.log('Socket connected in chat component');
     });
@@ -54,7 +54,6 @@ const Chat = () => {
       console.log('Messages after send:', messages.length);
       setMessage("");
       
-      // Clear typing indicator
       if (typingTimeout.current) {
         clearTimeout(typingTimeout.current);
       }
@@ -67,48 +66,69 @@ const Chat = () => {
   const handleTyping = () => {
     sendTyping(true, userName);
     
-    // Clear existing timeout
     if (typingTimeout.current) {
       clearTimeout(typingTimeout.current);
     }
     
-    // Set new timeout
     typingTimeout.current = setTimeout(() => {
       sendTyping(false, userName);
     }, 2000);
   };
 
+  const getUserIcon = (type) => {
+    switch(type) {
+      case 'teacher': return <FaUserTie className="inline mr-1" />;
+      case 'student': return <FaUserGraduate className="inline mr-1" />;
+      default: return <FaUser className="inline mr-1" />;
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full border rounded-lg overflow-hidden">
-      <div className="bg-blue-600 text-white p-4">
-        <h2 className="text-xl font-bold">
-          {subjectName || 'Subject Chat'} - {userName} ({userType})
-        </h2>
+    <div className="flex flex-col h-[calc(100vh-8rem)] bg-gray-50">
+      {/* Header */}
+      <div className="bg-blue-600 text-white p-4 shadow-md">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-bold">
+            {subjectName || 'Subject Chat'}
+          </h2>
+          <div className="flex items-center space-x-2">
+            <span className="bg-blue-500 px-2 py-1 rounded text-sm">
+              {getUserIcon(userType.toLowerCase())}
+              {userName} ({userType})
+            </span>
+          </div>
+        </div>
       </div>
 
-      <div className="flex-1 p-4 h-screen overflow-y-auto">
+      {/* Messages */}
+      <div className="flex-1 p-4 overflow-y-auto bg-gray-100">
         {messages.length === 0 ? (
-          <div className="text-center text-gray-500 mt-10">
-            <p>No messages yet. Start the conversation!</p>
-            <p className="text-xs mt-2">Subject: {subjectId} | User: {userId}</p>
+          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+            <FaEllipsisH className="text-4xl mb-4 animate-pulse" />
+            <p className="text-lg">No messages yet</p>
+            <p className="text-sm mt-1">Start the conversation!</p>
+            <p className="text-xs mt-4 opacity-70">Subject: {subjectId} | User: {userId}</p>
           </div>
         ) : (
           messages.map((msg, index) => (
             <div
-              key={`${msg[0]}-${index}`} // Use combination of chat_id and index
-              className={`flex ${
-                msg[1] === userId ? "justify-end" : "justify-start"
-              } mb-3`}
+              key={`${msg[0]}-${index}`}
+              className={`flex ${msg[1] === userId ? "justify-end" : "justify-start"} mb-3`}
             >
               <div
-                className={`max-w-xs rounded-lg p-3 ${
-                  msg[1] === userId ? "bg-blue-500 text-white" : "bg-gray-200"
+                className={`max-w-xs lg:max-w-md rounded-lg p-3 shadow ${
+                  msg[1] === userId 
+                    ? "bg-blue-500 text-white rounded-br-none" 
+                    : "bg-white text-gray-800 rounded-bl-none"
                 }`}
               >
-                <div className="font-bold">{msg[5]} {msg[1] === userId ? '(You)' : ''}</div>
-                <div>{msg[3]}</div>
-                <div className="text-xs mt-1 opacity-80 float-end">
-                  {new Date(msg[4]).toLocaleTimeString()}
+                <div className="font-bold flex items-center">
+                  {getUserIcon(msg[6]?.toLowerCase() || 'user')}
+                  {msg[5]} {msg[1] === userId ? '(You)' : ''}
+                </div>
+                <div className="my-1">{msg[3]}</div>
+                <div className="text-xs opacity-80 text-right">
+                  {new Date(msg[4]).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
             </div>
@@ -118,7 +138,7 @@ const Chat = () => {
         {typingUsers.length > 0 && (
           <div className="flex items-center p-2">
             {typingUsers.map((user) => (
-              <div key={user.userId} className="flex items-center mr-3">
+              <div key={user.userId} className="flex items-center mr-3 bg-white px-3 py-1 rounded-full shadow">
                 <div className="flex space-x-1 mr-2">
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                   <div
@@ -131,7 +151,7 @@ const Chat = () => {
                   ></div>
                 </div>
                 <span className="text-sm text-gray-500">
-                  {user.userName} typing...
+                  {user.userName} is typing...
                 </span>
               </div>
             ))}
@@ -141,29 +161,28 @@ const Chat = () => {
         <div ref={endRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className="border-t p-4">
-        <div className="flex flex-col">
-          <div className="flex mb-2">
-            <input
-              type="text"
-              value={message}
-              onChange={(e) => {
-                setMessage(e.target.value);
-                if (e.target.value.trim()) {
-                  handleTyping();
-                }
-              }}
-              className="flex-1 border rounded-l-lg px-4 py-2 focus:outline-none focus:border-blue-500"
-              placeholder="Type your message..."
-            />
-            <button
-              type="submit"
-              disabled={!message.trim()}
-              className="bg-blue-600 text-white px-4 py-2 rounded-r-lg hover:bg-blue-700 disabled:bg-gray-400"
-            >
-              Send
-            </button>
-          </div>
+      {/* Input */}
+      <form onSubmit={handleSubmit} className="border-t bg-white p-4 shadow-inner">
+        <div className="flex">
+          <input
+            type="text"
+            value={message}
+            onChange={(e) => {
+              setMessage(e.target.value);
+              if (e.target.value.trim()) {
+                handleTyping();
+              }
+            }}
+            className="flex-1 border border-gray-300 rounded-l-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Type your message..."
+          />
+          <button
+            type="submit"
+            disabled={!message.trim()}
+            className="bg-blue-600 text-white px-4 py-3 rounded-r-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors duration-200 flex items-center justify-center w-16"
+          >
+            <FaPaperPlane />
+          </button>
         </div>
       </form>
     </div>

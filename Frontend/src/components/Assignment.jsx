@@ -1,30 +1,32 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import {
-  getAssignmentList,
-  uploadAssignment,
-  downloadAssignment,
-  deleteAssignment,
-  getSubmittedAssignments,
-  viewStudentAssignment,
-  submitAssignment,
-  getStudentSubmissions,
-  downloadSubmittedAssignment,
+import { 
+  FaDownload, FaEye, FaStar, FaTrash, FaUpload, 
+  FaChevronLeft, FaFileAlt, FaCheckCircle, FaTimesCircle 
+} from "react-icons/fa";
+import { 
+  getAssignmentList, uploadAssignment, downloadAssignment, 
+  deleteAssignment, getSubmittedAssignments, viewStudentAssignment,
+  submitAssignment, getStudentSubmissions, downloadSubmittedAssignment
 } from "../routes/assignmentRoutes";
-import { FaDownload, FaEye, FaStar, FaTrash } from "react-icons/fa";
-import fileImage from "../assets/img/file.png";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Assignment = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const subId = location.state?.subjectId;
+  const userType = location.state?.userType;
+  const subjectName = location.state?.subjectName;
+
   // Assignment states
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
-  const [submitDate, setSubmitDate] = useState("");
   const [file, setFile] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [assignmentToDelete, setAssignmentToDelete] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   // Submission states
   const [submissions, setSubmissions] = useState([]);
@@ -33,18 +35,12 @@ const Assignment = () => {
   const [submissionsLoading, setSubmissionsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
 
-  const location = useLocation();
-  const subId = location.state?.subjectId;
-  const userType = location.state?.userType;
-  const subjectName = location.state?.subjectName;
-
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
         const assignmentList = await getAssignmentList(subId);
         setAssignments(assignmentList);
 
-        // Load student submissions if user is student
         if (userType === "student") {
           const submissionsMap = {};
           for (const assignment of assignmentList) {
@@ -52,10 +48,7 @@ const Assignment = () => {
               const submissionData = await getStudentSubmissions(assignment[0]);
               submissionsMap[assignment[0]] = submissionData;
             } catch (err) {
-              console.error(
-                `Error loading submissions for ${assignment[0]}:`,
-                err
-              );
+              console.error(`Error loading submissions for ${assignment[0]}:`, err);
             }
           }
           setStudentSubmissions(submissionsMap);
@@ -86,6 +79,7 @@ const Assignment = () => {
       return;
     }
 
+    setUploading(true);
     try {
       const formData = new FormData();
       formData.append("assignmentTitle", title);
@@ -103,9 +97,12 @@ const Assignment = () => {
       // Reset form
       setTitle("");
       setFile(null);
+      setDueDate("");
       document.getElementById("assignmentFile").value = "";
     } catch (error) {
       toast.error("Error uploading assignment");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -140,11 +137,7 @@ const Assignment = () => {
 
   const handleDownload = async (assignId) => {
     try {
-      const { data, fileName, contentType } = await downloadAssignment(
-        assignId
-      );
-
-      // Create blob with correct file type
+      const { data, fileName, contentType } = await downloadAssignment(assignId);
       const blob = new Blob([data], { type: contentType });
       const url = window.URL.createObjectURL(blob);
 
@@ -157,8 +150,6 @@ const Assignment = () => {
       // Cleanup
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-
-      toast.success("Download started");
     } catch (error) {
       toast.error("Failed to download assignment");
       console.error("Download error:", error);
@@ -203,7 +194,6 @@ const Assignment = () => {
   const handleViewSubmissions = async (assignmentId, lastDate) => {
     try {
       setSubmissionsLoading(true);
-      setSubmitDate(lastDate);
       const data = await getSubmittedAssignments(assignmentId);
       setSubmissions(data);
       setShowSubmissions(true);
@@ -247,10 +237,7 @@ const Assignment = () => {
       );
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute(
-        "download",
-        response.fileName || `submission_${submitId}`
-      );
+      link.setAttribute("download", response.fileName || `submission_${submitId}`);
       document.body.appendChild(link);
       link.click();
       setTimeout(() => {
@@ -266,7 +253,7 @@ const Assignment = () => {
   const isSubmissionOnTime = (submissionDate, dueDate) => {
     try {
       const subDate = new Date(submissionDate);
-      const assignmentDueDate = new Date(dueDate || submitDate);
+      const assignmentDueDate = new Date(dueDate);
       return subDate <= assignmentDueDate;
     } catch {
       return false;
@@ -286,32 +273,30 @@ const Assignment = () => {
     setSubmissions([]);
   };
 
+  const handleBack = () => {
+    navigate(`/${userType}Dashboard`);
+  };
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-r from-amber-50 to-pink-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center min-h-[calc(100vh-8rem)] bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-amber-50 to-pink-100 flex flex-col">
+    <div className="min-h-[calc(100vh-8rem)] bg-gradient-to-br from-blue-50 to-indigo-100 p-4 md:p-8">
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold mb-4">Confirm Delete</h3>
-            <p className="mb-6">
-              Are you sure you want to delete this assignment? This action
-              cannot be undone.
-            </p>
-            <div className="flex justify-end space-x-3">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Confirm Deletion</h3>
+            <p className="text-gray-600 mb-6">Are you sure you want to delete this assignment? This action cannot be undone.</p>
+            <div className="flex justify-end space-x-4">
               <button
-                onClick={() => {
-                  setShowDeleteConfirm(false);
-                  setAssignmentToDelete(null);
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition"
               >
                 Cancel
               </button>
@@ -326,372 +311,369 @@ const Assignment = () => {
         </div>
       )}
 
-      {/* Main Content */}
-      <main className="flex-grow container mx-auto px-4 py-8">
-        {!showSubmissions ? (
-          <>
-            {/* Upload Form */}
-            {userType === "teacher" && (
-              <div className="bg-white rounded-xl shadow-lg p-6 mb-8 w-full lg:w-1/2 mx-auto">
-                <h2 className="text-2xl font-bold mb-4 text-center">
-                  Upload Assignment
-                </h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <label
-                      htmlFor="assignmentTitle"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Assignment Title
-                    </label>
-                    <input
-                      type="text"
-                      id="assignmentTitle"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Enter assignment title"
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="dueDate"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Due Date
-                    </label>
-                    <input
-                      type="datetime-local"
-                      id="dueDate"
-                      value={dueDate}
-                      onChange={(e) => setDueDate(e.target.value)}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label
-                      htmlFor="assignmentFile"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Assignment File
-                    </label>
-                    <input
-                      type="file"
-                      id="assignmentFile"
-                      onChange={handleFileChange}
-                      accept=".pdf,.docx,.txt,.jpeg,.jpg,.png"
-                      className="w-full px-4 py-2 border rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                      required
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200"
-                  >
-                    Upload Assignment
-                  </button>
-                </form>
-              </div>
-            )}
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-indigo-800 flex items-center">
+            <FaFileAlt className="mr-2" />
+            {subjectName} Assignments
+          </h1>
+          <p className="text-indigo-600">{userType === 'teacher' ? 'Manage' : 'View'} course assignments</p>
+        </div>
+        <button
+          onClick={handleBack}
+          className="flex items-center text-indigo-600 hover:text-indigo-800 mt-4 md:mt-0"
+        >
+          <FaChevronLeft className="mr-1" />
+          Back to Dashboard
+        </button>
+      </div>
 
-            {/* Assignments List */}
-            <div className="w-full lg:w-2/3 mx-auto">
-              <h2 className="text-2xl font-bold mb-4">
-                {subjectName
-                  ? `${subjectName} - Assignments`
-                  : "Assignments List"}
+      {/* Main Content */}
+      {!showSubmissions ? (
+        <>
+          {/* Upload Form - Only for teachers */}
+          {userType === "teacher" && (
+            <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+              <h2 className="text-xl font-bold text-indigo-700 mb-4 flex items-center">
+                <FaUpload className="mr-2" />
+                Upload New Assignment
               </h2>
-              {assignments.length === 0 ? (
-                <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-                  <p className="text-gray-500">No assignments available</p>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Assignment Title</label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Enter assignment title"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    required
+                  />
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {assignments.map((assignment, index) => (
-                    <div
-                      key={assignment[0]}
-                      className="bg-white rounded-xl shadow-lg p-4"
-                    >
-                      <div className="flex items-center">
-                        <div className="bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center mr-4">
-                          {index + 1}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
+                  <input
+                    type="datetime-local"
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Assignment File</label>
+                  <div className="flex items-center">
+                    <label className="flex flex-col items-center px-4 py-6 bg-white rounded-lg border border-dashed border-gray-300 cursor-pointer hover:bg-blue-50 w-full">
+                      {file ? (
+                        <div className="text-center">
+                          <FaFileAlt className="mx-auto text-2xl text-indigo-600 mb-2" />
+                          <p className="text-sm font-medium text-gray-800">{file.name}</p>
+                          <p className="text-xs text-gray-500 mt-1">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
                         </div>
-                        <div className="mx-4">
-                          <img
-                            src={fileImage}
-                            alt="Assignment"
-                            className="w-8 h-8"
-                          />
+                      ) : (
+                        <div className="text-center">
+                          <FaUpload className="mx-auto text-2xl text-indigo-600 mb-2" />
+                          <p className="text-sm text-gray-600">Click to select file</p>
+                          <p className="text-xs text-gray-500 mt-1">Supports: PDF, DOCX, TXT, Images (Max 50MB)</p>
                         </div>
-                        <div className="flex-grow">
-                          <h3 className="font-semibold">{assignment[1]}</h3>
+                      )}
+                      <input
+                        id="assignmentFile"
+                        type="file"
+                        accept=".pdf,.docx,.txt,.jpeg,.jpg,.png"
+                        onChange={handleFileChange}
+                        className="hidden"
+                        required
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={uploading}
+                  className={`w-full flex items-center justify-center py-3 px-4 rounded-lg text-white font-medium ${
+                    uploading ? 'bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700'
+                  } transition`}
+                >
+                  {uploading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Uploading...
+                    </>
+                  ) : (
+                    'Upload Assignment'
+                  )}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Assignments List */}
+          <div className="bg-white lg:w-2/3 mx-auto rounded-xl shadow-lg overflow-hidden">
+            <div className="p-4 bg-indigo-50 border-b border-indigo-100">
+              <h2 className="text-lg font-semibold text-indigo-700">
+                {assignments.length} {assignments.length === 1 ? 'Assignment' : 'Assignments'} Available
+              </h2>
+            </div>
+
+            {assignments.length === 0 ? (
+              <div className="p-8 text-center">
+                <FaFileAlt className="mx-auto text-4xl text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-500">No assignments available yet</h3>
+                {userType === 'teacher' && (
+                  <p className="text-gray-500 mt-2">Upload your first assignment using the form above</p>
+                )}
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-200">
+                {assignments.map((assignment, index) => (
+                  <div key={assignment[0]} className="p-6 hover:bg-gray-50 transition">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex items-start gap-4">
+                        <div className="bg-indigo-100 text-indigo-600 rounded-lg p-3">
+                          <span className="font-bold">{index + 1}</span>
                         </div>
-                        <div className="flex-grow">
-                          <h3 className="font-semibold">
-                            Due date:{" "}
-                            <span
-                              className={
-                                new Date(assignment[2]) < new Date()
-                                  ? "text-red-500"
-                                  : "text-green-500"
-                              }
-                            >
+                        <div>
+                          <h3 className="font-semibold text-gray-800">{assignment[1]}</h3>
+                          <div className="flex items-center mt-1 text-sm text-gray-600">
+                            <span className="font-medium">Due:</span>
+                            <span className={`ml-1 ${new Date(assignment[2]) < new Date() ? 'text-red-500' : 'text-green-500'}`}>
                               {formatDate(assignment[2])}
                             </span>
-                          </h3>
-                        </div>
-
-                        <div className="flex space-x-2">
-                          {userType === "teacher" && (
-                            <button
-                              onClick={() =>
-                                handleViewSubmissions(
-                                  assignment[0],
-                                  assignment[2]
-                                )
-                              }
-                              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition duration-200"
-                              title="View Submissions"
-                            >
-                              View Submissions
-                            </button>
-                          )}
-                          <div
-                            onClick={() => handleView(assignment[0])}
-                            title="View"
-                            className="cursor-pointer"
-                          >
-                            <FaEye className="m-2 text-blue-600 text-xl transition-transform duration-200 hover:scale-125" />
                           </div>
-                          <div
-                            onClick={() => handleDownload(assignment[0])}
-                            title="Download"
-                            className="cursor-pointer"
-                          >
-                            <FaDownload className="m-2 text-green-600 text-xl transition-transform duration-200 hover:scale-125" />
-                          </div>
-                          {userType === "teacher" && (
-                            <div
-                              onClick={() => promptDelete(assignment[0])}
-                              title="Delete"
-                              className="cursor-pointer"
-                            >
-                              <FaTrash className="m-2 text-red-600 text-xl transition-transform duration-200 hover:scale-125" />
-                            </div>
-                          )}
                         </div>
                       </div>
 
-                      {userType === "student" && studentSubmissions[assignment[0]].length == 0 && (
-                        <div className="mt-4 border-t pt-4">
-                          <h4 className="font-medium mb-2">Submit Your Work</h4>
-                          <div className="flex flex-col sm:flex-row gap-4">
-                            <input
-                              id={`fileInput-${assignment[0]}`}
-                              type="file"
-                              accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                              onChange={handleStudentFileChange}
-                              className="border rounded px-3 py-2 flex-grow"
-                            />
+                      <div className="flex gap-2">
+                        {userType === "teacher" && (
+                          <button
+                            onClick={() => handleViewSubmissions(assignment[0], assignment[2])}
+                            className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition flex items-center"
+                          >
+                            <FaEye className="mr-2" />
+                            Submissions
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleView(assignment[0])}
+                          className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition"
+                          title="View"
+                        >
+                          <FaEye />
+                        </button>
+                        <button
+                          onClick={() => handleDownload(assignment[0])}
+                          className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition"
+                          title="Download"
+                        >
+                          <FaDownload />
+                        </button>
+                        {userType === "teacher" && (
+                          <button
+                            onClick={() => promptDelete(assignment[0])}
+                            className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition"
+                            title="Delete"
+                          >
+                            <FaTrash />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Student Submission Section */}
+                    {userType === "student" && (
+                      <div className="mt-4 pt-4 border-t">
+                        <h4 className="font-medium mb-3">
+                          {studentSubmissions[assignment[0]]?.length > 0 
+                            ? "Your Submissions" 
+                            : "Submit Your Work"}
+                        </h4>
+
+                        {studentSubmissions[assignment[0]]?.length > 0 ? (
+                          <div className="space-y-3">
+                            {studentSubmissions[assignment[0]].map((submission) => (
+                              <div key={submission[0]} className="bg-gray-50 p-4 rounded-lg">
+                                <div className="flex justify-between items-center">
+                                  <div className="flex items-center gap-2">
+                                    {isSubmissionOnTime(submission[1], assignment[2]) ? (
+                                      <FaCheckCircle className="text-green-500" title="Submitted on time" />
+                                    ) : (
+                                      <FaTimesCircle className="text-red-500" title="Submitted late" />
+                                    )}
+                                    <span className="font-medium">
+                                      Submitted: {formatDate(submission[1])}
+                                    </span>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => handleViewSubmission(submission[0])}
+                                      className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition"
+                                      title="View"
+                                    >
+                                      <FaEye />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDownloadSubmission(submission[0])}
+                                      className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition"
+                                      title="Download"
+                                    >
+                                      <FaDownload />
+                                    </button>
+                                  </div>
+                                </div>
+                                {submission[2] && (
+                                  <div className="mt-2 flex items-center gap-2">
+                                    <span className="font-medium">Grade:</span>
+                                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
+                                      {submission[2]}
+                                    </span>
+                                  </div>
+                                )}
+                                {submission[3] && (
+                                  <div className="mt-2 text-sm bg-yellow-50 p-2 rounded">
+                                    <span className="font-medium">Feedback: </span>
+                                    {submission[3]}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            <label className="flex-grow">
+                              <div className="flex items-center px-4 py-2 bg-white rounded-lg border border-dashed border-gray-300 cursor-pointer hover:bg-blue-50">
+                                <FaUpload className="mr-2 text-indigo-600" />
+                                <span className="text-sm">
+                                  {selectedFile ? selectedFile.name : 'Select file'}
+                                </span>
+                                <input
+                                  id={`fileInput-${assignment[0]}`}
+                                  type="file"
+                                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                                  onChange={handleStudentFileChange}
+                                  className="hidden"
+                                />
+                              </div>
+                            </label>
                             <button
                               onClick={() => handleStudentSubmit(assignment[0])}
-                              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded whitespace-nowrap"
+                              className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg whitespace-nowrap transition flex items-center justify-center"
+                              disabled={!selectedFile}
                             >
+                              <FaUpload className="mr-2" />
                               Submit
                             </button>
                           </div>
-                        </div>
-                      )}
-
-                      {studentSubmissions[assignment[0]]?.length > 0 &&
-                        userType === "student" && (
-                          <div className="mt-4 border-t pt-4">
-                            <h4 className="font-medium mb-2">
-                              Your Submissions
-                            </h4>
-                            <div className="space-y-2">
-                              {studentSubmissions[assignment[0]].map(
-                                (submission) => (
-                                  <div
-                                    key={submission[0]}
-                                    className="bg-gray-50 p-3 rounded"
-                                  >
-                                    <div className="flex justify-between items-center">
-                                      <div className="flex items-center gap-2">
-                                        <FaStar
-                                          className={`text-lg ${isSubmissionOnTime(
-                                            submission[1],
-                                            assignment[2]
-                                          )
-                                            ? "text-green-500"
-                                            : "text-red-500"
-                                            }`}
-                                          title={
-                                            isSubmissionOnTime(
-                                              submission[1],
-                                              assignment[2]
-                                            )
-                                              ? "Submitted on time"
-                                              : "Submitted late"
-                                          }
-                                        />
-                                        <span className="font-medium">
-                                          Submitted on:{" "}
-                                          {formatDate(submission[1])}
-                                        </span>
-                                      </div>
-
-                                      <div className="flex gap-2 items-center">
-                                        <div
-                                          onClick={() =>
-                                            handleViewSubmission(submission[0])
-                                          }
-                                          title="View"
-                                          className="cursor-pointer"
-                                        >
-                                          <FaEye className="m-2 text-blue-600 text-xl transition-transform duration-200 hover:scale-125" />
-                                        </div>
-                                        <div
-                                          onClick={() =>
-                                            handleDownloadSubmission(submission[0])
-                                          }
-                                          title="Download"
-                                          className="cursor-pointer"
-                                        >
-                                          <FaDownload className="m-2 text-green-600 text-xl transition-transform duration-200 hover:scale-125" />
-                                        </div>
-
-                                        {submission[2] && (
-                                          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
-                                            Grade: {submission[2]}
-                                          </span>
-                                        )}
-                                      </div>
-                                    </div>
-                                    {submission[3] && (
-                                      <div className="mt-2 text-sm bg-yellow-50 p-2 rounded">
-                                        <span className="font-medium">
-                                          Feedback:{" "}
-                                        </span>
-                                        {submission[3]}
-                                      </div>
-                                    )}
-                                  </div>
-                                )
-                              )}
-                            </div>
-                          </div>
                         )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </>
-        ) : (
-          /* Submissions View */
-          <div className="w-full">
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-3xl font-bold text-gray-800">
-                Submitted Assignments
-              </h1>
-              <button
-                onClick={closeSubmissions}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition"
-              >
-                Back to Assignments
-              </button>
-            </div>
-
-            {/* Submissions Table */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              {submissionsLoading ? (
-                <div className="p-8 text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-                </div>
-              ) : submissions.length === 0 ? (
-                <div className="p-8 text-center text-gray-600">
-                  No assignments submitted yet for this assignment
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className=""></th>
-                        <th className="px-6 py-3 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">
-                          Scholar ID
-                        </th>
-                        <th className="px-6 py-3 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">
-                          Student Name
-                        </th>
-                        <th className="px-6 py-3 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">
-                          Submitted On
-                        </th>
-                        <th className="px-6 py-3 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">
-                          Grade
-                        </th>
-                        <th className="px-6 py-3 text-left text-sm font-bold text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {submissions.map((submission, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <FaStar
-                              className={`text-lg ${isSubmissionOnTime(submission[3])
-                                ? "text-green-500"
-                                : "text-red-500"
-                                }`}
-                              title={
-                                isSubmissionOnTime(submission[3])
-                                  ? "Submitted on time"
-                                  : "Submitted late"
-                              }
-                            />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {submission[1]}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {submission[2]}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {formatDate(submission[3])}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            {submission[4] ? (
-                              <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full">
-                                {submission[4]}
-                              </span>
-                            ) : (
-                              <span className="text-gray-500">Not graded</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <button
-                              onClick={() =>
-                                handleViewStudentAssignment(submission[0])
-                              }
-                              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-                            >
-                              View
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-      </main>
+        </>
+      ) : (
+        /* Submissions View */
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="p-4 bg-indigo-50 border-b border-indigo-100 flex justify-between items-center">
+            <h2 className="text-lg font-semibold text-indigo-700">
+              Submissions ({submissions.length})
+            </h2>
+            <button
+              onClick={closeSubmissions}
+              className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition"
+            >
+              Back to Assignments
+            </button>
+          </div>
+
+          {submissionsLoading ? (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600 mx-auto"></div>
+            </div>
+          ) : submissions.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              No submissions yet for this assignment
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Scholar ID
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Student Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Submitted On
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Grade
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {submissions.map((submission) => (
+                    <tr key={submission[0]} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {isSubmissionOnTime(submission[3]) ? (
+                          <FaCheckCircle className="text-green-500" title="Submitted on time" />
+                        ) : (
+                          <FaTimesCircle className="text-red-500" title="Submitted late" />
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {submission[1]}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {submission[2]}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatDate(submission[3])}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {submission[4] ? (
+                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full">
+                            {submission[4]}
+                          </span>
+                        ) : (
+                          <span className="text-gray-500">Not graded</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <button
+                          onClick={() => handleViewStudentAssignment(submission[0])}
+                          className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition mr-2"
+                          title="View"
+                        >
+                          <FaEye />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,34 +1,32 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
-import mail_img from "../assets/img/mail.png";
-import lock_img from "../assets/img/lock.png";
-import show_img from "../assets/img/show.png";
-import hide_img from "../assets/img/hide.png";
-import otp_img from "../assets/img/otp.png";
-import {
-    checkEmailUsed,
-    sendOtp,
-    updatePassword,
-    verifyOtp,
-} from "../routes/authRoutes";
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaShieldAlt, FaArrowLeft } from "react-icons/fa";
+import { checkEmailUsed, sendOtp, updatePassword, verifyOtp } from "../routes/authRoutes";
 
 const ResetPassword = () => {
     const location = useLocation();
     let userType = location.state?.userType;
-    if (userType == "Admin") userType = "Institute";
+    if (userType === "Admin") userType = "Institute";
     
-    const [step, setStep] = useState(1);
+    const [step, setStep] = useState(2);
     const [email, setEmail] = useState("");
-    const [otp, setOtp] = useState("");
+    const [otp, setOtp] = useState(["", "", "", "", "", ""]);
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [passwordType, setPasswordType] = useState("password");
-    const [hideImg, setHideImg] = useState(hide_img);
+    const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [resendTimer, setResendTimer] = useState(0);
     const [isVerifying, setIsVerifying] = useState(false);
     const navigate = useNavigate();
+    const otpInputs = useRef([]);
+
+    // Focus management for OTP inputs
+    useEffect(() => {
+        if (step === 2 && otpInputs.current[0]) {
+            otpInputs.current[0].focus();
+        }
+    }, [step]);
 
     // Timer effect for resend OTP
     useEffect(() => {
@@ -41,9 +39,23 @@ const ResetPassword = () => {
         return () => clearInterval(interval);
     }, [resendTimer]);
 
-    const passwordShow = () => {
-        setPasswordType(passwordType === "password" ? "text" : "password");
-        setHideImg(passwordType === "password" ? show_img : hide_img);
+    const handleOtpChange = (index, value) => {
+        if (!/^\d*$/.test(value)) return; // Only allow numbers
+        
+        const newOtp = [...otp];
+        newOtp[index] = value;
+        setOtp(newOtp);
+
+        // Auto focus next input
+        if (value && index < 5) {
+            otpInputs.current[index + 1].focus();
+        }
+    };
+
+    const handleOtpKeyDown = (index, e) => {
+        if (e.key === "Backspace" && !otp[index] && index > 0) {
+            otpInputs.current[index - 1].focus();
+        }
     };
 
     const handleSendOTP = async (e) => {
@@ -77,14 +89,15 @@ const ResetPassword = () => {
 
     const handleVerifyOTP = async (e) => {
         e.preventDefault();
-        if (!otp) {
-            toast.error("OTP is required");
+        const fullOtp = otp.join("");
+        if (fullOtp.length !== 6) {
+            toast.error("Please enter a 6-digit OTP");
             return;
         }
 
         setIsVerifying(true);
         try {
-            const res = await verifyOtp(email, otp);
+            const res = await verifyOtp(email, fullOtp);
             if (res.success) {
                 setStep(3);
                 toast.success(res.message);
@@ -125,154 +138,224 @@ const ResetPassword = () => {
         }
     };
 
+    // Determine color scheme based on user type
+    const getColorScheme = () => {
+        switch(userType.toLowerCase()) {
+            case 'student':
+                return { primary: 'bg-blue-600', hover: 'hover:bg-blue-700', focus: 'focus:ring-blue-500' };
+            case 'teacher':
+                return { primary: 'bg-green-600', hover: 'hover:bg-green-700', focus: 'focus:ring-green-500' };
+            case 'institute':
+                return { primary: 'bg-purple-600', hover: 'hover:bg-purple-700', focus: 'focus:ring-purple-500' };
+            default:
+                return { primary: 'bg-indigo-600', hover: 'hover:bg-indigo-700', focus: 'focus:ring-indigo-500' };
+        }
+    };
+
+    const colors = getColorScheme();
+
     return (
-        <div className="flex justify-center items-center py-36 bg-gray-100">
-            <div className="container w-[400px] mb-3">
-                <div className="login-form bg-white p-8 rounded-lg shadow-lg">
-                    <h2 className="text-2xl font-bold mb-4 text-center">
-                        {userType} Reset Password
-                    </h2>
+        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-100 p-4">
+            <div className="w-full max-w-md">
+                <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
+                    {/* Header with dynamic color accent */}
+                    <div className={`${colors.primary} py-4 px-6`}>
+                        <h2 className="text-xl font-bold text-white text-center">
+                            {userType} Password Reset
+                        </h2>
+                    </div>
 
-                    {/* Step 1: Email Input */}
-                    {step === 1 && (
-                        <form onSubmit={handleSendOTP}>
-                            <div className="login_input flex items-center border border-gray-300 rounded-lg p-2 mb-4">
-                                <img
-                                    src={mail_img}
-                                    alt="Email Icon"
-                                    width="22px"
-                                    className="mr-2"
-                                />
-                                <input
-                                    required
-                                    type="email"
-                                    placeholder="Email"
-                                    className="input w-full focus:outline-none"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                />
-                            </div>
-                            <Link
-                                to={`/${userType.toLowerCase()}Login`}
-                                className="text-blue-500 hover:underline mb-4 inline-block"
-                            >
-                                {userType} Login
-                            </Link>
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="w-full bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
-                            >
-                                {isLoading ? "Sending..." : "Send OTP"}
-                            </button>
-                            <p className="text-center mt-4">
-                                Don't have an account?{" "}
-                                <Link
-                                    to={`/${userType.toLowerCase()}Signup`}
-                                    className="text-blue-500 hover:underline"
-                                >
-                                    Sign up
-                                </Link>
-                            </p>
-                        </form>
-                    )}
+                    <div className="p-8">
+                        {/* Step 1: Email Input */}
+                        {step === 1 && (
+                            <form className="space-y-6" onSubmit={handleSendOTP}>
+                                <div className="space-y-2">
+                                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                                        Email Address
+                                    </label>
+                                    <div className="relative rounded-md shadow-sm">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <FaEnvelope className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            id="email"
+                                            name="email"
+                                            type="email"
+                                            autoComplete="email"
+                                            required
+                                            className={`focus:ring-2 ${colors.focus} focus:border-transparent block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md`}
+                                            placeholder="your@email.com"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
 
-                    {/* Step 2: OTP Verification */}
-                    {step === 2 && (
-                        <form onSubmit={handleVerifyOTP}>
-                            <div className="login_input flex items-center border border-gray-300 rounded-lg p-2 mb-4">
-                                <img
-                                    src={otp_img}
-                                    alt="OTP Icon"
-                                    width="23px"
-                                    className="mr-2"
-                                />
-                                <input
-                                    required
-                                    type="text"
-                                    placeholder="Enter OTP"
-                                    className="input w-full focus:outline-none"
-                                    value={otp}
-                                    onChange={(e) => setOtp(e.target.value)}
-                                />
-                            </div>
-                            <div className="flex justify-between mb-4">
-                                <button
-                                    type="button"
-                                    onClick={handleSendOTP}
-                                    disabled={resendTimer > 0 || isLoading}
-                                    className="w-[48%] bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
-                                >
-                                    {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend OTP"}
-                                </button>
+                                <div className="flex items-center justify-between">
+                                    <Link
+                                        to={`/${userType.toLowerCase()}Login`}
+                                        className="text-sm text-blue-600 hover:text-blue-500 hover:underline"
+                                    >
+                                        Back to Login
+                                    </Link>
+                                </div>
+
                                 <button
                                     type="submit"
-                                    disabled={isVerifying}
-                                    className="w-[48%] bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+                                    disabled={isLoading}
+                                    className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${colors.primary} ${colors.hover} focus:outline-none focus:ring-2 focus:ring-offset-2 ${colors.focus} disabled:opacity-70`}
                                 >
-                                    {isVerifying ? "Verifying..." : "Verify OTP"}
+                                    {isLoading ? "Sending OTP..." : "Send OTP"}
                                 </button>
-                            </div>
-                        </form>
-                    )}
 
-                    {/* Step 3: New Password */}
-                    {step === 3 && (
-                        <form onSubmit={handleResetPassword}>
-                            <div className="mb-4">
-                                <label className="block mb-2">New Password:</label>
-                                <div className="login_input flex items-center border border-gray-300 rounded-lg p-2">
-                                    <img
-                                        src={lock_img}
-                                        alt="Password Icon"
-                                        width="23px"
-                                        className="mr-2"
-                                    />
-                                    <input
-                                        required
-                                        type={passwordType}
-                                        placeholder="New Password"
-                                        className="input w-full focus:outline-none"
-                                        value={newPassword}
-                                        onChange={(e) => setNewPassword(e.target.value)}
-                                    />
-                                    <img
-                                        src={hideImg}
-                                        alt="toggle password visibility"
-                                        width="23px"
-                                        className="cursor-pointer"
-                                        onClick={passwordShow}
-                                    />
+                                <div className="text-center text-sm">
+                                    <span className="text-gray-600">Don't have an account? </span>
+                                    <Link
+                                        to={`/${userType.toLowerCase()}Signup`}
+                                        className="font-medium text-blue-600 hover:text-blue-500 hover:underline"
+                                    >
+                                        Sign up
+                                    </Link>
                                 </div>
-                            </div>
-                            <div className="mb-4">
-                                <label className="block mb-2">Confirm Password:</label>
-                                <div className="login_input flex items-center border border-gray-300 rounded-lg p-2">
-                                    <img
-                                        src={lock_img}
-                                        alt="Password Icon"
-                                        width="23px"
-                                        className="mr-2"
-                                    />
-                                    <input
-                                        required
-                                        type={passwordType}
-                                        placeholder="Confirm Password"
-                                        className="input w-full focus:outline-none"
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                    />
+                            </form>
+                        )}
+
+                        {/* Step 2: OTP Verification */}
+                        {step === 2 && (
+                            <form className="space-y-6" onSubmit={handleVerifyOTP}>
+                                <button
+                                    type="button"
+                                    onClick={() => setStep(1)}
+                                    className="flex items-center text-blue-600 hover:text-blue-500 text-sm font-medium"
+                                >
+                                    <FaArrowLeft className="mr-1" />
+                                    Back to email
+                                </button>
+
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-medium text-gray-700">
+                                        Enter 6-digit OTP
+                                    </label>
+                                    <div className="flex justify-center space-x-3">
+                                        {[0, 1, 2, 3, 4, 5].map((index) => (
+                                            <input
+                                                key={index}
+                                                ref={(el) => (otpInputs.current[index] = el)}
+                                                type="text"
+                                                maxLength="1"
+                                                className="w-12 h-12 text-center text-xl border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                                value={otp[index]}
+                                                onChange={(e) => handleOtpChange(index, e.target.value)}
+                                                onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                                            />
+                                        ))}
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-2 text-center">
+                                        We've sent a verification code to your email
+                                    </p>
                                 </div>
-                            </div>
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="w-full bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
-                            >
-                                {isLoading ? "Updating..." : "Change Password"}
-                            </button>
-                        </form>
-                    )}
+
+                                <div className="flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={handleSendOTP}
+                                        disabled={resendTimer > 0 || isLoading}
+                                        className={`flex-1 py-3 rounded-md shadow-sm text-sm font-medium ${
+                                            resendTimer > 0 || isLoading
+                                                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                                : "bg-gray-600 text-white hover:bg-gray-700"
+                                        }`}
+                                    >
+                                        {resendTimer > 0 ? `Resend (${resendTimer}s)` : "Resend OTP"}
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isVerifying}
+                                        className={`flex-1 ${colors.primary} ${colors.hover} text-white py-3 rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${colors.focus} disabled:opacity-70`}
+                                    >
+                                        {isVerifying ? "Verifying..." : "Verify OTP"}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+
+                        {/* Step 3: New Password */}
+                        {step === 3 && (
+                            <form className="space-y-6" onSubmit={handleResetPassword}>
+                                <button
+                                    type="button"
+                                    onClick={() => setStep(2)}
+                                    className="flex items-center text-blue-600 hover:text-blue-500 text-sm font-medium"
+                                >
+                                    <FaArrowLeft className="mr-1" />
+                                    Back to OTP
+                                </button>
+
+                                <div className="space-y-2">
+                                    <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+                                        New Password
+                                    </label>
+                                    <div className="relative rounded-md shadow-sm">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <FaLock className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            id="newPassword"
+                                            name="newPassword"
+                                            type={showPassword ? "text" : "password"}
+                                            required
+                                            className={`focus:ring-2 ${colors.focus} focus:border-transparent block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-md`}
+                                            placeholder="New Password"
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                        />
+                                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                            <button
+                                                type="button"
+                                                className="text-gray-500 hover:text-gray-600 focus:outline-none"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                            >
+                                                {showPassword ? (
+                                                    <FaEyeSlash className="h-5 w-5" />
+                                                ) : (
+                                                    <FaEye className="h-5 w-5" />
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                                        Confirm Password
+                                    </label>
+                                    <div className="relative rounded-md shadow-sm">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <FaLock className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            id="confirmPassword"
+                                            name="confirmPassword"
+                                            type={showPassword ? "text" : "password"}
+                                            required
+                                            className={`focus:ring-2 ${colors.focus} focus:border-transparent block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md`}
+                                            placeholder="Confirm Password"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${colors.primary} ${colors.hover} focus:outline-none focus:ring-2 focus:ring-offset-2 ${colors.focus} disabled:opacity-70`}
+                                >
+                                    {isLoading ? "Updating..." : "Change Password"}
+                                </button>
+                            </form>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
