@@ -90,6 +90,8 @@ export const getInstituteDetails = async (req, res) => {
 export const updateAdminCredentials = async (req, res) => {
     const { adName, adMob, adEmail } = req.body;
     const adminPic = req.file?.buffer;
+
+    console.log(req.body, adminPic, req.session.instituteMail)
     
     // Input validation
     if (!adName && !adMob && !adEmail && !adminPic) {

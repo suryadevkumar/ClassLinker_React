@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { FaSearch, FaUsers, FaEye, FaFilter } from "react-icons/fa";
 import {
   getClasses,
   getCourses,
@@ -24,8 +25,15 @@ const StudentList = () => {
   // Load departments on component mount
   useEffect(() => {
     const fetchDepartments = async () => {
-      const response = await getDepartments();
-      setDepartments(response);
+      try {
+        setLoading(true);
+        const response = await getDepartments();
+        setDepartments(response);
+      } catch (error) {
+        toast.error("Failed to load departments");
+      } finally {
+        setLoading(false);
+      }
     };
     fetchDepartments();
   }, []);
@@ -50,7 +58,6 @@ const StudentList = () => {
         setSelectedClass("");
       } catch (error) {
         toast.error("Error loading courses");
-        console.error("Error loading courses:", error);
       } finally {
         setLoading(false);
       }
@@ -75,7 +82,6 @@ const StudentList = () => {
         setSelectedClass("");
       } catch (error) {
         toast.error("Error loading classes");
-        console.error("Error loading classes:", error);
       } finally {
         setLoading(false);
       }
@@ -91,10 +97,7 @@ const StudentList = () => {
     } else {
       const filtered = students.filter(
         (student) =>
-          student[1]
-            .toString()
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
+          student[1].toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
           student[2].toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredStudents(filtered);
@@ -119,7 +122,6 @@ const StudentList = () => {
       setSearchTerm("");
     } catch (error) {
       toast.error("Error loading student list");
-      console.error("Error loading student list:", error);
     } finally {
       setLoading(false);
     }
@@ -162,27 +164,30 @@ const StudentList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-amber-50 to-pink-100 p-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Filter Section */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6 animate-fade-in">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
-            Select Student Details
-          </h2>
+    <div className="min-h-[calc(100vh-8rem)] bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl md:text-4xl font-bold text-indigo-800">Student Management</h1>
+          <p className="text-indigo-600 mt-2">View and manage student records</p>
+        </div>
 
-          <div className="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-4 md:space-y-0">
-            <div className="flex-1">
-              <label
-                htmlFor="department"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+        {/* Filter Section */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <div className="flex items-center mb-4">
+            <FaFilter className="text-indigo-600 mr-2" />
+            <h2 className="text-xl font-semibold text-gray-800">Filter Students</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Department
               </label>
               <select
-                id="department"
                 value={selectedDepartment}
                 onChange={(e) => setSelectedDepartment(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 disabled={loading}
               >
                 <option value="">Select Department</option>
@@ -194,18 +199,14 @@ const StudentList = () => {
               </select>
             </div>
 
-            <div className="flex-1">
-              <label
-                htmlFor="course"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Course
               </label>
               <select
-                id="course"
                 value={selectedCourse}
                 onChange={(e) => setSelectedCourse(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 disabled={!selectedDepartment || loading}
               >
                 <option value="">Select Course</option>
@@ -217,18 +218,14 @@ const StudentList = () => {
               </select>
             </div>
 
-            <div className="flex-1">
-              <label
-                htmlFor="class"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Class
               </label>
               <select
-                id="class"
                 value={selectedClass}
                 onChange={(e) => setSelectedClass(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 disabled={!selectedCourse || loading}
               >
                 <option value="">Select Class</option>
@@ -243,15 +240,17 @@ const StudentList = () => {
             <div className="flex items-end">
               <button
                 onClick={loadStudentList}
-                disabled={
-                  loading ||
-                  !selectedDepartment ||
-                  !selectedCourse ||
-                  !selectedClass
-                }
-                className="px-4 py-2 mt-6 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading || !selectedDepartment || !selectedCourse || !selectedClass}
+                className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
-                {loading ? "Loading..." : "View List"}
+                {loading ? (
+                  <span className="animate-pulse">Loading...</span>
+                ) : (
+                  <>
+                    <FaUsers className="mr-2" />
+                    View Students
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -259,81 +258,90 @@ const StudentList = () => {
 
         {/* Student List Section */}
         {students.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md p-6 animate-fade-in">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">Student List</h2>
-              <div className="mt-4 md:mt-0">
-                <input
-                  type="text"
-                  placeholder="Search by name or scholar ID"
-                  className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 w-full md:w-64"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="p-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                <div className="flex items-center mb-4 md:mb-0">
+                  <FaUsers className="text-indigo-600 mr-2" />
+                  <h2 className="text-xl font-semibold text-gray-800">Student List</h2>
+                </div>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FaSearch className="text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search by name or ID..."
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-full md:w-64"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
               </div>
-            </div>
 
-            {filteredStudents.length === 0 ? (
-              <p className="text-center text-gray-500 py-4">
-                No any student found
-              </p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-orange-500">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                        Scholar ID
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-x">
-                        Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-x">
-                        Department
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-x">
-                        Course
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider border-x">
-                        Year
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredStudents.map((student, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {student[1]}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {student[2]}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {student[3]}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {student[4]}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {student[5]}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <button
-                            onClick={() => handleViewStudent(student[0])}
-                            className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                          >
-                            View
-                          </button>
-                        </td>
+              {filteredStudents.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No students found matching your criteria</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-indigo-600">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                          Scholar ID
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                          Department
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                          Course
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                          Year
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                          Actions
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredStudents.map((student, index) => (
+                        <tr key={index} className="hover:bg-indigo-50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {student[1]}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {student[2]}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {student[3]}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {student[4]}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {student[5]}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <button
+                              onClick={() => handleViewStudent(student[0])}
+                              className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors flex items-center"
+                            >
+                              <FaEye className="mr-1" />
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

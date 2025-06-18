@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { FaUser, FaEnvelope, FaPhone, FaCalendarAlt, FaSchool, FaGraduationCap, FaUsers, FaIdCard, FaEdit, FaTimes, FaSave, FaCheck, FaTimesCircle } from "react-icons/fa";
 import {
   getStudentDetails,
   updateStudentDetails,
@@ -73,41 +74,35 @@ const StudentDetails = ({ studentId, onClose }) => {
       });
     } catch (error) {
       toast.error("Failed to load student details");
-      console.error("Error loading student details:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Helper function to load courses for a specific department
+  // Helper functions for loading dropdown data
   const loadCoursesForDepartment = async (departmentId) => {
     try {
       const data = await getCourses(departmentId);
       setCourses(data);
     } catch (error) {
-      console.error("Error loading courses:", error);
       toast.error("Failed to load courses");
     }
   };
 
-  // Helper function to load classes for a specific course
   const loadClassesForCourse = async (courseId) => {
     try {
       const data = await getClasses(courseId);
       setClasses(data);
     } catch (error) {
-      console.error("Error loading classes:", error);
       toast.error("Failed to load classes");
     }
   };
 
-  // Helper function to load sections for a specific class
   const loadSectionsForClass = async (classId) => {
     try {
       const data = await getSections(classId);
       setSectionsCount(data);
     } catch (error) {
-      console.error("Error loading sections:", error);
       toast.error("Failed to load sections");
     }
   };
@@ -180,54 +175,33 @@ const StudentDetails = ({ studentId, onClose }) => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    if (name === "VERIFIED") {
-      setFormData({
-        ...formData,
-        VERIFIED: checked ? "Verified" : "Unverified",
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
-    }
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? (checked ? "Verified" : "Unverified") : value,
+    });
   };
 
   const handleFileChange = (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    const previewUrl = URL.createObjectURL(file);
     if (type === "profilePic") {
-      setProfilePicPreview(URL.createObjectURL(file));
-      setFormData((prev) => ({
-        ...prev,
-        STD_PIC: file,
-      }));
+      setProfilePicPreview(previewUrl);
+      setFormData(prev => ({ ...prev, STD_PIC: file }));
     } else if (type === "document") {
-      setDocPreview(URL.createObjectURL(file));
-      setFormData((prev) => ({
-        ...prev,
-        STD_DOC: file,
-      }));
+      setDocPreview(previewUrl);
+      setFormData(prev => ({ ...prev, STD_DOC: file }));
     }
   };
 
   const handleImageClick = (imageData) => {
     if (!imageData) return;
-
-    if (imageData.startsWith("data:image")) {
-      const newWindow = window.open();
-      newWindow.document.write(
-        `<img src="${imageData}" style="max-width: 100%; height: auto;" />`
-      );
-    } else if (jpgImg) {
-      const newWindow = window.open();
-      newWindow.document.write(
-        `<img src="${
-          jpgImg + imageData
-        }" style="max-width: 100%; height: auto;" />`
-      );
-    }
+    const newWindow = window.open();
+    newWindow.document.write(
+      `<img src="${imageData.startsWith("data:image") ? imageData : jpgImg + imageData}" 
+       style="max-width: 100%; height: auto;" />`
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -242,25 +216,18 @@ const StudentDetails = ({ studentId, onClose }) => {
         }
       });
 
-      if (formData.STD_PIC) {
-        formDataToSend.append("STD_PIC", formData.STD_PIC);
-      }
-      if (formData.STD_DOC) {
-        formDataToSend.append("STD_DOC", formData.STD_DOC);
-      }
-
+      if (formData.STD_PIC) formDataToSend.append("STD_PIC", formData.STD_PIC);
+      if (formData.STD_DOC) formDataToSend.append("STD_DOC", formData.STD_DOC);
       formDataToSend.append("stdId", student.STD_ID);
 
       const response = await updateStudentDetails(formDataToSend);
       if (response.success) {
         fetchStudentDetails();
-
         toast.success("Student updated successfully");
         setIsEditing(false);
       }
     } catch (error) {
       toast.error("Failed to update student");
-      console.error("Error updating student:", error);
     } finally {
       setLoading(false);
     }
@@ -271,21 +238,17 @@ const StudentDetails = ({ studentId, onClose }) => {
     setLoading(true);
 
     try {
-      // Load departments first
       const depts = await getDepartments();
       setDepartments(depts);
 
-      // If student has a department, load courses
       if (student.DEP_ID) {
         const crs = await getCourses(student.DEP_ID);
         setCourses(crs);
 
-        // If student has a course, load classes
         if (student.CRS_ID) {
           const cls = await getClasses(student.CRS_ID);
           setClasses(cls);
 
-          // If student has a class, load sections
           if (student.CLS_ID) {
             const sec = await getSections(student.CLS_ID);
             setSectionsCount(sec);
@@ -294,7 +257,6 @@ const StudentDetails = ({ studentId, onClose }) => {
       }
     } catch (error) {
       toast.error("Failed to load dropdown data");
-      console.error("Error loading dropdown data:", error);
     } finally {
       setLoading(false);
     }
@@ -302,7 +264,6 @@ const StudentDetails = ({ studentId, onClose }) => {
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    // Reset form data to original student data
     if (student) {
       const dob = new Date(student.STD_DOB);
       const formattedDob = dob.toISOString().split("T")[0];
@@ -321,11 +282,8 @@ const StudentDetails = ({ studentId, onClose }) => {
         DEP_ID: student.DEP_ID,
         CRS_ID: student.CRS_ID,
         CLS_ID: student.CLS_ID,
-        STD_PIC: null, // Reset file fields
-        STD_DOC: null,
       });
     }
-    // Clear previews and reset dropdown states
     setProfilePicPreview(null);
     setDocPreview(null);
     setCourses([]);
@@ -336,9 +294,9 @@ const StudentDetails = ({ studentId, onClose }) => {
   if (loading && !student) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500 mx-auto"></div>
+        <div className="bg-white p-8 rounded-xl shadow-2xl max-w-md w-full">
+          <div className="text-center py-6">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600 mx-auto"></div>
             <p className="mt-4 text-gray-700">Loading student details...</p>
           </div>
         </div>
@@ -350,46 +308,35 @@ const StudentDetails = ({ studentId, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-gray-800">
-              {isEditing ? "Edit Student Details" : "Student Details"}
-            </h2>
+      <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-8">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-indigo-800">
+                {isEditing ? "Edit Student Details" : "Student Details"}
+              </h2>
+              <p className="text-indigo-600">
+                {student.SCH_ID} - {student.STD_NAME}
+              </p>
+            </div>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-500 hover:text-gray-700 transition-colors"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <FaTimes className="text-xl" />
             </button>
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Left Column */}
               <div className="space-y-6">
-                {/* Student Photo */}
+                {/* Profile Picture */}
                 <div className="flex flex-col items-center">
                   <div
-                    className="w-64 h-64 rounded-full bg-gray-200 mb-2 overflow-hidden border-2 border-orange-300 cursor-pointer"
-                    onClick={() =>
-                      handleImageClick(
-                        profilePicPreview || jpgImg + student.STD_PIC
-                      )
-                    }
+                    className="w-48 h-48 rounded-full bg-indigo-50 mb-4 overflow-hidden border-4 border-indigo-100 cursor-pointer shadow-md"
+                    onClick={() => handleImageClick(profilePicPreview || jpgImg + student.STD_PIC)}
                   >
                     <img
                       src={profilePicPreview || jpgImg + student.STD_PIC}
@@ -397,8 +344,10 @@ const StudentDetails = ({ studentId, onClose }) => {
                       className="w-full h-full object-cover"
                     />
                   </div>
+                  
                   {isEditing && (
-                    <label className="cursor-pointer bg-orange-100 text-orange-700 px-4 py-2 rounded-md hover:bg-orange-200 transition-colors">
+                    <label className="cursor-pointer bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg hover:bg-indigo-200 transition-colors flex items-center">
+                      <FaEdit className="mr-2" />
                       Change Photo
                       <input
                         type="file"
@@ -408,296 +357,294 @@ const StudentDetails = ({ studentId, onClose }) => {
                       />
                     </label>
                   )}
-                  <div className="flex items-center mt-2">
-                    <label className="block text-sm font-medium text-gray-700 mr-4">
-                      Status:
-                    </label>
+                  
+                  <div className="flex items-center mt-4">
+                    <span className="text-sm font-medium text-gray-700 mr-3">Status:</span>
                     {isEditing ? (
-                      <input
-                        type="checkbox"
-                        name="VERIFIED"
-                        checked={formData.VERIFIED === "Verified"}
-                        onChange={handleInputChange}
-                        className="h-5 w-5 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
-                      />
+                      <label className="inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          name="VERIFIED"
+                          checked={formData.VERIFIED === "Verified"}
+                          onChange={handleInputChange}
+                          className="sr-only peer"
+                        />
+                        <div className={`relative w-11 h-6 rounded-full peer ${formData.VERIFIED === "Verified" ? 'bg-green-500' : 'bg-gray-300'} peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all`}></div>
+                        <span className="ml-2 text-sm font-medium text-gray-700">
+                          {formData.VERIFIED}
+                        </span>
+                      </label>
                     ) : (
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          student.VERIFIED === "Verified"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium flex items-center ${
+                        student.VERIFIED === "Verified"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}>
+                        {student.VERIFIED === "Verified" ? (
+                          <FaCheck className="mr-1" />
+                        ) : (
+                          <FaTimesCircle className="mr-1" />
+                        )}
                         {student.VERIFIED}
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Basic Info */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Scholar ID
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        name="SCH_ID"
-                        value={formData.SCH_ID}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                        required
-                      />
-                    ) : (
-                      <input
-                        type="text"
-                        value={student.SCH_ID}
-                        className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
-                        readOnly
-                      />
-                    )}
-                  </div>
+                {/* Basic Information */}
+                <div className="bg-indigo-50 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-indigo-800 mb-4 flex items-center">
+                    <FaUser className="mr-2" />
+                    Basic Information
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Scholar ID</label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          name="SCH_ID"
+                          value={formData.SCH_ID}
+                          onChange={handleInputChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          required
+                        />
+                      ) : (
+                        <div className="w-full p-3 bg-white border border-gray-300 rounded-lg">
+                          {student.SCH_ID}
+                        </div>
+                      )}
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Name
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        name="STD_NAME"
-                        value={formData.STD_NAME}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                        required
-                      />
-                    ) : (
-                      <input
-                        type="text"
-                        value={student.STD_NAME}
-                        className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
-                        readOnly
-                      />
-                    )}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          name="STD_NAME"
+                          value={formData.STD_NAME}
+                          onChange={handleInputChange}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          required
+                        />
+                      ) : (
+                        <div className="w-full p-3 bg-white border border-gray-300 rounded-lg">
+                          {student.STD_NAME}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                      {isEditing ? (
+                        <div className="relative">
+                          <FaCalendarAlt className="absolute left-3 top-3.5 text-gray-400" />
+                          <input
+                            type="date"
+                            name="STD_DOB"
+                            value={formData.STD_DOB}
+                            onChange={handleInputChange}
+                            className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            required
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-full p-3 bg-white border border-gray-300 rounded-lg">
+                          {new Date(student.STD_DOB).toLocaleDateString()}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Contact Info */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                {/* Contact Information */}
+                <div className="bg-indigo-50 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-indigo-800 mb-4 flex items-center">
+                    <FaEnvelope className="mr-2" />
                     Contact Information
                   </h3>
+                  
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Date of Birth
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
                       {isEditing ? (
-                        <input
-                          type="date"
-                          name="STD_DOB"
-                          value={formData.STD_DOB}
-                          onChange={handleInputChange}
-                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                          required
-                        />
+                        <div className="relative">
+                          <FaPhone className="absolute left-3 top-3.5 text-gray-400" />
+                          <input
+                            type="tel"
+                            name="STD_MOBILE"
+                            value={formData.STD_MOBILE}
+                            onChange={handleInputChange}
+                            className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            required
+                          />
+                        </div>
                       ) : (
-                        <input
-                          type="text"
-                          value={new Date(student.STD_DOB).toLocaleDateString()}
-                          className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
-                          readOnly
-                        />
+                        <div className="w-full p-3 bg-white border border-gray-300 rounded-lg">
+                          {student.STD_MOBILE}
+                        </div>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Mobile
-                      </label>
-                      {isEditing ? (
-                        <input
-                          type="tel"
-                          name="STD_MOBILE"
-                          value={formData.STD_MOBILE}
-                          onChange={handleInputChange}
-                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                          required
-                        />
-                      ) : (
-                        <input
-                          type="text"
-                          value={student.STD_MOBILE}
-                          className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
-                          readOnly
-                        />
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email
-                      </label>
-                      <input
-                        type="text"
-                        value={student.STD_EMAIL}
-                        className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
-                        readOnly
-                      />
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                      <div className="relative">
+                        <FaEnvelope className="absolute left-3 top-3.5 text-gray-400" />
+                        <div className="w-full pl-10 p-3 bg-white border border-gray-300 rounded-lg">
+                          {student.STD_EMAIL}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Right Column - Academic Info */}
+              {/* Right Column */}
               <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                {/* Academic Information */}
+                <div className="bg-indigo-50 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-indigo-800 mb-4 flex items-center">
+                    <FaSchool className="mr-2" />
                     Academic Information
                   </h3>
+                  
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Department
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
                       {isEditing ? (
-                        <select
-                          name="DEP_ID"
-                          value={formData.DEP_ID}
-                          onChange={handleDepartmentChange}
-                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                          required
-                        >
-                          <option value="">Select Department</option>
-                          {departments.map((department) => (
-                            <option key={department[0]} value={department[0]}>
-                              {department[1]}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="relative">
+                          <FaGraduationCap className="absolute left-3 top-3.5 text-gray-400" />
+                          <select
+                            name="DEP_ID"
+                            value={formData.DEP_ID}
+                            onChange={handleDepartmentChange}
+                            className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none"
+                            required
+                          >
+                            <option value="">Select Department</option>
+                            {departments.map((dept) => (
+                              <option key={dept[0]} value={dept[0]}>
+                                {dept[1]}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       ) : (
-                        <input
-                          type="text"
-                          value={student.DEP_NAME}
-                          className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
-                          readOnly
-                        />
+                        <div className="w-full p-3 bg-white border border-gray-300 rounded-lg">
+                          {student.DEP_NAME}
+                        </div>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Course
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Course</label>
                       {isEditing ? (
-                        <select
-                          name="CRS_ID"
-                          value={formData.CRS_ID}
-                          onChange={handleCourseChange}
-                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100"
-                          required
-                          disabled={!formData.DEP_ID}
-                        >
-                          <option value="">Select Course</option>
-                          {courses.map((course) => (
-                            <option key={course[0]} value={course[0]}>
-                              {course[1]}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="relative">
+                          <FaGraduationCap className="absolute left-3 top-3.5 text-gray-400" />
+                          <select
+                            name="CRS_ID"
+                            value={formData.CRS_ID}
+                            onChange={handleCourseChange}
+                            className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none disabled:bg-gray-100"
+                            required
+                            disabled={!formData.DEP_ID}
+                          >
+                            <option value="">Select Course</option>
+                            {courses.map((course) => (
+                              <option key={course[0]} value={course[0]}>
+                                {course[1]}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       ) : (
-                        <input
-                          type="text"
-                          value={student.CRS_NAME}
-                          className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
-                          readOnly
-                        />
+                        <div className="w-full p-3 bg-white border border-gray-300 rounded-lg">
+                          {student.CRS_NAME}
+                        </div>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Class Name
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Class</label>
                       {isEditing ? (
-                        <select
-                          name="CLS_ID"
-                          value={formData.CLS_ID}
-                          onChange={handleClassChange}
-                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100"
-                          required
-                          disabled={!formData.CRS_ID}
-                        >
-                          <option value="">Select Class</option>
-                          {classes.map((cls) => (
-                            <option key={cls[0]} value={cls[0]}>
-                              {cls[1]}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="relative">
+                          <FaUsers className="absolute left-3 top-3.5 text-gray-400" />
+                          <select
+                            name="CLS_ID"
+                            value={formData.CLS_ID}
+                            onChange={handleClassChange}
+                            className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none disabled:bg-gray-100"
+                            required
+                            disabled={!formData.CRS_ID}
+                          >
+                            <option value="">Select Class</option>
+                            {classes.map((cls) => (
+                              <option key={cls[0]} value={cls[0]}>
+                                {cls[1]}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       ) : (
-                        <input
-                          type="text"
-                          value={student.CLS_NAME || "Not Available"}
-                          className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
-                          readOnly
-                        />
+                        <div className="w-full p-3 bg-white border border-gray-300 rounded-lg">
+                          {student.CLS_NAME || "Not Available"}
+                        </div>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Section
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Section</label>
                       {isEditing ? (
-                        <select
-                          name="SECTION"
-                          value={formData.SECTION}
-                          onChange={handleInputChange}
-                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100"
-                          required
-                          disabled={!formData.CLS_ID}
-                        >
-                          <option value="">Select Section</option>
-                          {Array.from({ length: sectionsCount }, (_, i) => (
-                            <option key={i + 1} value={i + 1}>
-                              {`Section ${i + 1}`}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="relative">
+                          <FaUsers className="absolute left-3 top-3.5 text-gray-400" />
+                          <select
+                            name="SECTION"
+                            value={formData.SECTION}
+                            onChange={handleInputChange}
+                            className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none disabled:bg-gray-100"
+                            required
+                            disabled={!formData.CLS_ID}
+                          >
+                            <option value="">Select Section</option>
+                            {Array.from({ length: sectionsCount }, (_, i) => (
+                              <option key={i + 1} value={i + 1}>
+                                Section {i + 1}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       ) : (
-                        <input
-                          type="text"
-                          value={student.SECTION}
-                          className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
-                          readOnly
-                        />
+                        <div className="w-full p-3 bg-white border border-gray-300 rounded-lg">
+                          {student.SECTION}
+                        </div>
                       )}
                     </div>
                   </div>
                 </div>
 
-                {/* Document Preview */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                    Document
+                {/* Document Section */}
+                <div className="bg-indigo-50 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-indigo-800 mb-4 flex items-center">
+                    <FaIdCard className="mr-2" />
+                    Student Document
                   </h3>
-                  <div>
+                  
+                  <div className="flex flex-col items-center">
                     <div
-                      className="w-[100%] overflow-hidden cursor-pointer"
-                      onClick={() =>
-                        handleImageClick(docPreview || jpgImg + student.STD_DOC)
-                      }
+                      className="w-full max-w-xs cursor-pointer mb-4"
+                      onClick={() => handleImageClick(docPreview || jpgImg + student.STD_DOC)}
                     >
                       <img
                         src={docPreview || jpgImg + student.STD_DOC}
                         alt="Student Document"
-                        className="w-[62%] h-auto border border-gray-500 p-1 rounded-md ml-20"
+                        className="w-full h-auto border-2 border-gray-300 rounded-lg shadow-sm"
                       />
                     </div>
+                    
                     {isEditing && (
-                      <label className="mt-2 ml-32 cursor-pointer bg-orange-100 text-orange-700 px-4 py-2 rounded-md hover:bg-orange-200 transition-colors inline-block">
+                      <label className="cursor-pointer bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg hover:bg-indigo-200 transition-colors flex items-center">
+                        <FaEdit className="mr-2" />
                         Change Document
                         <input
                           type="file"
@@ -712,21 +659,24 @@ const StudentDetails = ({ studentId, onClose }) => {
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end space-x-3">
+            {/* Action Buttons */}
+            <div className="mt-8 flex justify-end space-x-4">
               {!isEditing ? (
                 <>
                   <button
                     type="button"
                     onClick={handleEditClick}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center"
                   >
-                    Edit
+                    <FaEdit className="mr-2" />
+                    Edit Details
                   </button>
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                    className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center"
                   >
+                    <FaTimes className="mr-2" />
                     Close
                   </button>
                 </>
@@ -735,17 +685,31 @@ const StudentDetails = ({ studentId, onClose }) => {
                   <button
                     type="button"
                     onClick={handleCancelEdit}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                    className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center"
                     disabled={loading}
                   >
+                    <FaTimes className="mr-2" />
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
                     disabled={loading}
                   >
-                    {loading ? "Saving..." : "Save Changes"}
+                    {loading ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <FaSave className="mr-2" />
+                        Save Changes
+                      </>
+                    )}
                   </button>
                 </>
               )}

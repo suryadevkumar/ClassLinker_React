@@ -34,6 +34,7 @@ const Assignment = () => {
   const [showSubmissions, setShowSubmissions] = useState(false);
   const [submissionsLoading, setSubmissionsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   useEffect(() => {
     const fetchAssignments = async () => {
@@ -193,6 +194,7 @@ const Assignment = () => {
 
   const handleViewSubmissions = async (assignmentId, lastDate) => {
     try {
+      setEndDate(lastDate);
       setSubmissionsLoading(true);
       const data = await getSubmittedAssignments(assignmentId);
       setSubmissions(data);
@@ -633,7 +635,7 @@ const Assignment = () => {
                   {submissions.map((submission) => (
                     <tr key={submission[0]} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {isSubmissionOnTime(submission[3]) ? (
+                        {isSubmissionOnTime(submission[3], endDate) ? (
                           <FaCheckCircle className="text-green-500" title="Submitted on time" />
                         ) : (
                           <FaTimesCircle className="text-red-500" title="Submitted late" />

@@ -3,7 +3,7 @@ import { FaBook, FaChalkboardTeacher, FaUniversity } from 'react-icons/fa';
 
 const Front = () => {
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-indigo-50 to-blue-100 flex items-center justify-center p-6">
+    <div className="h-[calc(100vh-8rem)] bg-gradient-to-br from-indigo-50 to-blue-100 flex items-center justify-center p-6">
       <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         {/* Left Side - Hero Content */}
         <div className="text-center lg:text-left space-y-8">

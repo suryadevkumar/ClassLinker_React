@@ -40,7 +40,7 @@ const LoginCard = ({ login_type }) => {
   const colors = getColorScheme();
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-100 p-4">
+    <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-100 p-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
           {/* Header with colored accent */}

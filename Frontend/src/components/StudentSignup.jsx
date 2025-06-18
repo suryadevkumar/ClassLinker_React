@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
+import { FaEye, FaEyeSlash, FaArrowLeft, FaCheck, FaEnvelope, FaLock, FaUser, FaCalendarAlt, FaIdCard, FaPhone, FaUniversity, FaGraduationCap, FaChalkboardTeacher, FaUsers, FaCamera, FaFileUpload, FaRedo, FaSpinner } from "react-icons/fa";
 import {
   getInstitute,
   getSections,
@@ -32,12 +33,12 @@ const StudentSignup = () => {
     stdOTP: "",
   });
   const [photoPreview, setPhotoPreview] = useState(null);
-  const [passwordMatch, setPasswordMatch] = useState(null);
   const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Refs for file inputs
   const fileInputRef = useRef(null);
@@ -56,6 +57,15 @@ const StudentSignup = () => {
     };
     loadColleges();
   }, []);
+
+  // Handle back button click
+  const handleBack = () => {
+    setStep(1);
+    setOtpSent(false);
+    setOtpVerified(false);
+    setFormData({...formData, stdOTP: ""});
+    setResendTimer(0);
+  };
 
   // Handle college selection change
   const handleCollegeChange = async (e) => {
@@ -148,15 +158,6 @@ const StudentSignup = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-
-    // Check password match in real-time
-    if (name === "pass" || name === "CNFpass") {
-      if (formData.pass && formData.CNFpass) {
-        setPasswordMatch(formData.pass === formData.CNFpass);
-      } else {
-        setPasswordMatch(null);
-      }
-    }
   };
 
   // Handle photo upload and preview
@@ -231,11 +232,11 @@ const StudentSignup = () => {
   // Handle sending OTP
   const handleSendOTP = async () => {
     try {
+      startResendTimer();
+      setOtpSent(true);
       const response = await sendOtp(formData.stdMail);
       if (response.success) {
         toast.success("OTP sent successfully!");
-        setOtpSent(true);
-        startResendTimer();
       } else {
         toast.error(response.message || "Failed to send OTP");
       }
@@ -304,6 +305,8 @@ const StudentSignup = () => {
       return;
     }
 
+    setIsSubmitting(true);
+
     // Prepare form data for submission
     const formDataToSend = new FormData();
     formDataToSend.append("stdName", formData.stdName);
@@ -336,360 +339,442 @@ const StudentSignup = () => {
       toast.error(
         error.response?.data?.message || "Signup failed. Please try again."
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-amber-50 to-pink-200 flex flex-col">
-      {/* Main Content */}
-      <main className="flex-grow flex items-center justify-center py-8">
-        <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg mx-4 animate-slide-up">
-          <h2 className="text-2xl font-bold mb-6 text-center">
-            Student Sign Up
-          </h2>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-lg w-full max-w-4xl overflow-hidden animate-slide-up">
+        {/* Header */}
+        <div className="bg-indigo-600 p-6 text-white text-center">
+          <h1 className="text-2xl md:text-3xl font-bold">
+            Student Registration
+          </h1>
+          <div className="flex justify-center mt-4">
+            <div className={`h-2 rounded-full mx-1 w-1/4 ${step === 1 ? 'bg-white' : 'bg-indigo-400'}`}></div>
+            <div className={`h-2 rounded-full mx-1 w-1/4 ${step === 2 ? 'bg-white' : 'bg-indigo-400'}`}></div>
+          </div>
+        </div>
 
+        <div className="p-6 md:p-8">
           <form onSubmit={step === 1 ? handleNextStep : handleSubmit}>
             {step === 1 ? (
-              <div className="space-y-4">
-                {/* Personal Information Section */}
-                <div>
-                  <label className="block font-medium mb-1">Name:</label>
-                  <input
-                    type="text"
-                    name="stdName"
-                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-rose-300"
-                    value={formData.stdName}
-                    onChange={handleChange}
-                    required
-                  />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Personal Information */}
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold text-indigo-700 border-b pb-2 flex items-center">
+                    <FaUser className="mr-2" /> Personal Information
+                  </h2>
+                  
+                  <div>
+                    <label className="block text-gray-700 mb-1">Full Name</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="stdName"
+                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        value={formData.stdName}
+                        onChange={handleChange}
+                        required
+                      />
+                      <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-700 mb-1">Date of Birth</label>
+                    <div className="relative">
+                      <input
+                        type="date"
+                        name="stdDob"
+                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        value={formData.stdDob}
+                        onChange={handleChange}
+                        required
+                      />
+                      <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-700 mb-1">Scholar ID</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="scholarId"
+                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        value={formData.scholarId}
+                        onChange={handleChange}
+                        required
+                      />
+                      <FaIdCard className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-700 mb-1">Mobile Number</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        name="stdMob"
+                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        value={formData.stdMob}
+                        onChange={handleChange}
+                        required
+                      />
+                      <FaPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-700 mb-1">Email ID</label>
+                    <div className="relative">
+                      <input
+                        type="email"
+                        name="stdMail"
+                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        value={formData.stdMail}
+                        onChange={handleChange}
+                        required
+                      />
+                      <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block font-medium mb-1">
-                    Date of Birth:
-                  </label>
-                  <input
-                    type="date"
-                    name="stdDob"
-                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-rose-300"
-                    value={formData.stdDob}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
+                {/* Academic Information */}
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold text-indigo-700 border-b pb-2 flex items-center">
+                    <FaUniversity className="mr-2" /> Academic Information
+                  </h2>
 
-                <div>
-                  <label className="block font-medium mb-1">Scholar ID:</label>
-                  <input
-                    type="text"
-                    name="scholarId"
-                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-rose-300"
-                    value={formData.scholarId}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
+                  <div>
+                    <label className="block text-gray-700 mb-1">College</label>
+                    <div className="relative">
+                      <select
+                        name="college"
+                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none"
+                        value={formData.college}
+                        onChange={handleCollegeChange}
+                        required
+                      >
+                        <option value="">Select College</option>
+                        {colleges.map((college) => (
+                          <option key={college[0]} value={college[0]}>
+                            {college[1]}
+                          </option>
+                        ))}
+                      </select>
+                      <FaUniversity className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
+                  </div>
 
-                <div>
-                  <label className="block font-medium mb-1">
-                    Mobile Number:
-                  </label>
-                  <input
-                    type="text"
-                    name="stdMob"
-                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-rose-300"
-                    value={formData.stdMob}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
+                  <div>
+                    <label className="block text-gray-700 mb-1">Department</label>
+                    <div className="relative">
+                      <select
+                        name="department"
+                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none disabled:bg-gray-50"
+                        value={formData.department}
+                        onChange={handleDepartmentChange}
+                        required
+                        disabled={!formData.college}
+                      >
+                        <option value="">Select Department</option>
+                        {departments.map((department) => (
+                          <option key={department[0]} value={department[0]}>
+                            {department[1]}
+                          </option>
+                        ))}
+                      </select>
+                      <FaChalkboardTeacher className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
+                  </div>
 
-                <div>
-                  <label className="block font-medium mb-1">Email ID:</label>
-                  <input
-                    type="email"
-                    name="stdMail"
-                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-rose-300"
-                    value={formData.stdMail}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
+                  <div>
+                    <label className="block text-gray-700 mb-1">Course</label>
+                    <div className="relative">
+                      <select
+                        name="course"
+                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none disabled:bg-gray-50"
+                        value={formData.course}
+                        onChange={handleCourseChange}
+                        required
+                        disabled={!formData.department}
+                      >
+                        <option value="">Select Course</option>
+                        {courses.map((course) => (
+                          <option key={course[0]} value={course[0]}>
+                            {course[1]}
+                          </option>
+                        ))}
+                      </select>
+                      <FaGraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
+                  </div>
 
-                {/* Academic Information Section */}
-                <div>
-                  <label className="block font-medium mb-1">College:</label>
-                  <select
-                    name="college"
-                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-rose-300"
-                    value={formData.college}
-                    onChange={handleCollegeChange}
-                    required
-                  >
-                    <option value="">Select College</option>
-                    {colleges.map((college) => (
-                      <option key={college[0]} value={college[0]}>
-                        {college[1]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                  <div>
+                    <label className="block text-gray-700 mb-1">Class</label>
+                    <div className="relative">
+                      <select
+                        name="cls"
+                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none disabled:bg-gray-50"
+                        value={formData.cls}
+                        onChange={handleClassChange}
+                        required
+                        disabled={!formData.course}
+                      >
+                        <option value="">Select Class</option>
+                        {classes.map((cls) => (
+                          <option key={cls[0]} value={cls[0]}>
+                            {cls[1]}
+                          </option>
+                        ))}
+                      </select>
+                      <FaChalkboardTeacher className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
+                  </div>
 
-                <div>
-                  <label className="block font-medium mb-1">Department:</label>
-                  <select
-                    name="department"
-                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-rose-300 disabled:bg-gray-100"
-                    value={formData.department}
-                    onChange={handleDepartmentChange}
-                    required
-                    disabled={!formData.college}
-                  >
-                    <option value="">Select Department</option>
-                    {departments.map((department) => (
-                      <option key={department[0]} value={department[0]}>
-                        {department[1]}
-                      </option>
-                    ))}
-                  </select>
+                  <div>
+                    <label className="block text-gray-700 mb-1">Section</label>
+                    <div className="relative">
+                      <select
+                        name="section"
+                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none disabled:bg-gray-50"
+                        value={formData.section}
+                        onChange={handleChange}
+                        required
+                        disabled={!formData.cls}
+                      >
+                        <option value="">Select Section</option>
+                        {Array.from({ length: sections }, (_, i) => (
+                          <option key={i + 1} value={i + 1}>
+                            {`Section ${i + 1}`}
+                          </option>
+                        ))}
+                      </select>
+                      <FaUsers className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    </div>
+                  </div>
                 </div>
-
-                <div>
-                  <label className="block font-medium mb-1">Course:</label>
-                  <select
-                    name="course"
-                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-rose-300 disabled:bg-gray-100"
-                    value={formData.course}
-                    onChange={handleCourseChange}
-                    required
-                    disabled={!formData.department}
-                  >
-                    <option value="">Select Course</option>
-                    {courses.map((course) => (
-                      <option key={course[0]} value={course[0]}>
-                        {course[1]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-medium mb-1">Class:</label>
-                  <select
-                    name="cls"
-                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-rose-300 disabled:bg-gray-100"
-                    value={formData.cls}
-                    onChange={handleClassChange}
-                    required
-                    disabled={!formData.course}
-                  >
-                    <option value="">Select Class</option>
-                    {classes.map((cls) => (
-                      <option key={cls[0]} value={cls[0]}>
-                        {cls[1]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-medium mb-1">Section:</label>
-                  <select
-                    name="section"
-                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-rose-300 disabled:bg-gray-100"
-                    value={formData.section}
-                    onChange={handleChange}
-                    required
-                    disabled={!formData.cls}
-                  >
-                    <option value="">Select Section</option>
-                    {Array.from({ length: sections }, (_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {`Section ${i + 1}`}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full bg-gray-600 text-white py-2 rounded hover:bg-gray-700 transition mt-6"
-                >
-                  Next
-                </button>
               </div>
             ) : (
-              <div className="space-y-4">
-                {/* Step 2 - Verification and Documents */}
-                {photoPreview && (
-                  <img
-                    src={photoPreview}
-                    alt="Preview"
-                    className="max-w-[200px] mx-auto mb-4 rounded border"
-                  />
-                )}
+              <div className="space-y-6">
+                {/* Documents and Verification */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-semibold text-indigo-700 border-b pb-2 flex items-center">
+                      <FaCamera className="mr-2" /> Upload Documents
+                    </h2>
 
-                <div>
-                  <label className="block font-medium mb-1">
-                    Passport Size Photo:
-                  </label>
-                  <input
-                    type="file"
-                    name="photo"
-                    accept="image/*"
-                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-rose-300"
-                    onChange={handlePhotoUpload}
-                    ref={fileInputRef}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-medium mb-1">
-                    Admission Receipt:
-                  </label>
-                  <input
-                    type="file"
-                    name="receipt"
-                    accept="image/*"
-                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-rose-300"
-                    ref={receiptInputRef}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-medium mb-1">
-                    Create Password:
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      name="pass"
-                      className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-rose-300 pr-10"
-                      placeholder="Password"
-                      value={formData.pass}
-                      onChange={handleChange}
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? "🙈" : "👁️"}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-medium mb-1">
-                    Confirm Password:
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      name="CNFpass"
-                      className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-rose-300 pr-10"
-                      placeholder="Confirm Password"
-                      value={formData.CNFpass}
-                      onChange={handleChange}
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                    >
-                      {showConfirmPassword ? "🙈" : "👁️"}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-medium mb-1">
-                    Verify your mail:
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      className="flex-grow px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-rose-300"
-                      value={formData.stdMail}
-                      readOnly
-                    />
-                    <button
-                      type="button"
-                      className={`px-4 py-2 rounded ${
-                        resendTimer > 0
-                          ? "bg-gray-400"
-                          : "bg-green-500 hover:bg-green-600"
-                      } text-white transition`}
-                      onClick={handleSendOTP}
-                      disabled={resendTimer > 0}
-                    >
-                      {resendTimer > 0
-                        ? `Resend in 0:${
-                            resendTimer < 10 ? "0" : ""
-                          }${resendTimer}`
-                        : "Send OTP"}
-                    </button>
-                  </div>
-                </div>
-
-                {otpSent && (
-                  <>
-                    <div>
-                      <label className="block font-medium mb-1">
-                        Enter OTP:
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          name="stdOTP"
-                          className="flex-grow px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-rose-300"
-                          value={formData.stdOTP}
-                          onChange={handleChange}
-                          disabled={otpVerified}
+                    {photoPreview && (
+                      <div className="flex justify-center">
+                        <img
+                          src={photoPreview}
+                          alt="Preview"
+                          className="max-w-[200px] rounded-lg border-2 border-indigo-100"
                         />
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-gray-700 mb-1">Passport Photo</label>
+                      <div className="relative">
+                        <input
+                          type="file"
+                          name="photo"
+                          accept="image/*"
+                          className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          onChange={handlePhotoUpload}
+                          ref={fileInputRef}
+                          required
+                        />
+                        <FaCamera className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-700 mb-1">Admission Receipt</label>
+                      <div className="relative">
+                        <input
+                          type="file"
+                          name="receipt"
+                          accept="image/*"
+                          className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          ref={receiptInputRef}
+                          required
+                        />
+                        <FaFileUpload className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h2 className="text-xl font-semibold text-indigo-700 border-b pb-2 flex items-center">
+                      <FaLock className="mr-2" /> Account Security
+                    </h2>
+
+                    <div>
+                      <label className="block text-gray-700 mb-1">Create Password</label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          name="pass"
+                          className="w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          placeholder="Password"
+                          value={formData.pass}
+                          onChange={handleChange}
+                          required
+                        />
+                        <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         <button
                           type="button"
-                          className={`px-4 py-2 rounded ${
-                            otpVerified
-                              ? "bg-green-500"
-                              : "bg-blue-500 hover:bg-blue-600"
-                          } text-white transition`}
-                          onClick={handleVerifyOTP}
-                          disabled={otpVerified}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-indigo-600"
+                          onClick={() => setShowPassword(!showPassword)}
                         >
-                          {otpVerified ? "Verified" : "Verify"}
+                          {showPassword ? <FaEyeSlash /> : <FaEye />}
                         </button>
                       </div>
                     </div>
-                  </>
-                )}
 
-                <div className="flex gap-2 mt-6">
-                  <button
-                    type="submit"
-                    className="flex-grow bg-green-500 text-white py-2 rounded hover:bg-green-600 transition"
-                  >
-                    Sign Up
-                  </button>
-                  <button
-                    type="button"
-                    className="flex-grow bg-gray-500 text-white py-2 rounded hover:bg-gray-600 transition"
-                    onClick={() => setStep(1)}
-                  >
-                    Previous
-                  </button>
+                    <div>
+                      <label className="block text-gray-700 mb-1">Confirm Password</label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          name="CNFpass"
+                          className="w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          placeholder="Confirm Password"
+                          value={formData.CNFpass}
+                          onChange={handleChange}
+                          required
+                        />
+                        <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <button
+                          type="button"
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-indigo-600"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        >
+                          {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                        </button>
+                      </div>
+                      {formData.pass && formData.CNFpass && formData.CNFpass===formData.pass && (
+                        <p className="text-green-500 text-sm mt-1">Passwords match</p>
+                      )}
+                      {formData.pass && formData.CNFpass && formData.CNFpass!==formData.pass &&(
+                        <p className="text-red-500 text-sm mt-1">Passwords do not match</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-700 mb-1">Email Verification</label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-grow">
+                          <input
+                            type="email"
+                            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            value={formData.stdMail}
+                            readOnly
+                          />
+                          <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        </div>
+                        <button
+                          type="button"
+                          className={`px-4 py-2 rounded-lg flex items-center ${
+                            resendTimer > 0
+                              ? "bg-gray-400"
+                              : "bg-indigo-600 hover:bg-indigo-700"
+                          } text-white transition`}
+                          onClick={handleSendOTP}
+                          disabled={resendTimer > 0}
+                        >
+                          {resendTimer > 0 ? (
+                            <>
+                              <FaRedo className="mr-2 animate-spin" />
+                              {`0:${resendTimer < 10 ? "0" : ""}${resendTimer}`}
+                            </>
+                          ) : (
+                            "Send OTP"
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {otpSent && (
+                      <div>
+                        <label className="block text-gray-700 mb-1">Enter OTP</label>
+                        <div className="flex gap-2">
+                          <div className="relative flex-grow">
+                            <input
+                              type="text"
+                              name="stdOTP"
+                              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                              value={formData.stdOTP}
+                              onChange={handleChange}
+                              disabled={otpVerified}
+                              placeholder="Enter 6-digit OTP"
+                            />
+                            <FaCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          </div>
+                          <button
+                            type="button"
+                            className={`px-4 py-2 rounded-lg flex items-center ${
+                              otpVerified
+                                ? "bg-green-500"
+                                : "bg-indigo-600 hover:bg-indigo-700"
+                            } text-white transition`}
+                            onClick={handleVerifyOTP}
+                            disabled={otpVerified}
+                          >
+                            {otpVerified ? "Verified" : "Verify"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
+
+            <div className="mt-8 flex justify-between">
+              {step === 2 && (
+                <button
+                  type="button"
+                  className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition flex items-center disabled:opacity-50"
+                  onClick={handleBack}
+                  disabled={isSubmitting}
+                >
+                  <FaArrowLeft className="mr-2" /> Back
+                </button>
+              )}
+              
+              <button
+                type="submit"
+                className={`px-6 py-2 rounded-lg text-white transition flex items-center ml-auto ${
+                  step === 1 
+                    ? "bg-indigo-600 hover:bg-indigo-700" 
+                    : "bg-green-500 hover:bg-green-600"
+                } disabled:opacity-70`}
+                disabled={isSubmitting || (step === 2 && !otpVerified)}
+              >
+                {isSubmitting ? (
+                  <>
+                    <FaSpinner className="animate-spin mr-2" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    {step === 1 ? "Continue" : "Complete Registration"}
+                    {step === 2 && <FaCheck className="ml-2" />}
+                  </>
+                )}
+              </button>
+            </div>
           </form>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
