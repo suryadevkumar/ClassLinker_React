@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { FaClipboardCheck, FaBook, FaVideo, FaTasks, FaComments, FaKey } from 'react-icons/fa';
 import { fetchStudentDetails, fetchSubjectList } from '../routes/studentRoutes';
 import { Link, useNavigate } from 'react-router-dom';
@@ -157,7 +156,7 @@ const StudentDashboard = () => {
               color="bg-indigo-50"
             />
             <Link 
-              to="/changePassword" 
+              to="/change/password" 
               state={{ userType: "Student" }}
               className="block"
             >
@@ -222,8 +221,6 @@ const StudentDashboard = () => {
           </div>
         </div>
       )}
-
-      <ToastContainer position="bottom-right" />
     </div>
   );
 };

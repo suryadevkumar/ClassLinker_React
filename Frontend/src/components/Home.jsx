@@ -19,7 +19,7 @@ const Front = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl">
             {/* Student Login Card */}
             <Link 
-              to="/studentLogin" 
+              to="/student/login" 
               className="p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-all border border-blue-50 hover:border-blue-100 group"
             >
               <div className="h-12 w-12 mx-auto mb-3 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-colors">
@@ -31,7 +31,7 @@ const Front = () => {
             
             {/* Teacher Login Card */}
             <Link 
-              to="/teacherLogin" 
+              to="/teacher/login" 
               className="p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-all border border-blue-50 hover:border-blue-100 group"
             >
               <div className="h-12 w-12 mx-auto mb-3 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-500 group-hover:text-white transition-colors">
@@ -43,7 +43,7 @@ const Front = () => {
             
             {/* Institute Login Card */}
             <Link 
-              to="/instituteLogin" 
+              to="/institute/login" 
               className="p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-all border border-blue-50 hover:border-blue-100 group"
             >
               <div className="h-12 w-12 mx-auto mb-3 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white transition-colors">

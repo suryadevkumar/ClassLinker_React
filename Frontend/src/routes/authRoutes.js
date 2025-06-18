@@ -70,7 +70,7 @@ export const login = async (userType, email, password) => {
     }
 };
 
-export const updatePassword = async (userType, email, pass) =>{
+export const updatePassword = async (userType, email, pass) => {
     try {
         const response = await axios.post('/auth/updatePassword', { userType, email, pass }, {
             withCredentials: true,
@@ -88,29 +88,29 @@ export const updatePassword = async (userType, email, pass) =>{
 }
 
 export const checkSession = async () => {
-  try {
-    const response = await axios.get('/auth/check-session', {
-      withCredentials: true
-    });
-    return response.data;
-  } catch (error) {
-    return { success: false, message: 'Session check failed' };
-  }
+    try {
+        const response = await axios.get('/auth/check/session', {
+            withCredentials: true
+        });
+        return response.data;
+    } catch (error) {
+        return { success: false, message: 'Session check failed' };
+    }
 };
 
 export const logout = async (userType) => {
-  try {
-    const response = await axios.post('/auth/logout', { userType }, {
-      withCredentials: true,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    return response.data;
-  } catch (error) {
-    return {
-      success: false,
-      message: error.response?.data?.message || 'Logout failed',
-    };
-  }
+    try {
+        const response = await axios.post('/auth/logout', { userType }, {
+            withCredentials: true,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        return response.data;
+    } catch (error) {
+        return {
+            success: false,
+            message: error.response?.data?.message || 'Logout failed',
+        };
+    }
 };

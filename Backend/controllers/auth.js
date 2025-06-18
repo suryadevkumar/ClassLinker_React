@@ -236,7 +236,6 @@ export const updatePassword = async (req, res) => {
     }
 };
 
-// session check
 export const checkSession = async (req, res) => {
     const userTypes = ['student', 'teacher', 'institute', 'admin'];
 
@@ -257,10 +256,8 @@ export const checkSession = async (req, res) => {
     });
 };
 
-// logout
 export const logout = async (req, res) => {
     try {
-        // Get session ID before destruction (for logging if needed)
         const sessionId = req.sessionID;
 
         req.session.destroy(err => {

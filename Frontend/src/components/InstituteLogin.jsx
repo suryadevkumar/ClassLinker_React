@@ -95,7 +95,7 @@ const InstituteLogin = () => {
 
     const response = await verifyOtp(email, fullOtp);
     if (response.success) {
-      navigate("/instituteDashboard");
+      navigate("/institute/dashboard");
     } else {
       toast.error(response.message);
     }
@@ -177,13 +177,13 @@ const InstituteLogin = () => {
                 {/* Links */}
                 <div className="flex items-center justify-between">
                   <Link
-                    to="/adminLogin"
+                    to="/admin/login"
                     className="text-sm text-purple-600 hover:text-purple-500 hover:underline"
                   >
                     Admin Login
                   </Link>
                   <Link
-                    to="/resetPassword"
+                    to="/reset/password"
                     state={{ userType: "Institute" }}
                     className="text-sm text-purple-600 hover:text-purple-500 hover:underline"
                   >
@@ -205,7 +205,7 @@ const InstituteLogin = () => {
                 <div className="text-center text-sm">
                   <span className="text-gray-600">Don't have an account? </span>
                   <Link
-                    to="/instituteSignup"
+                    to="/institute/signup"
                     className="font-medium text-purple-600 hover:text-purple-500 hover:underline"
                   >
                     Sign up

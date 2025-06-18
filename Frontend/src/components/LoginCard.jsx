@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
-import { login } from "../routes/authRoutes.js";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import { login } from "../routes/authRoutes";
 
 const LoginCard = ({ login_type }) => {
   const [email, setEmail] = useState("");
@@ -16,10 +16,9 @@ const LoginCard = ({ login_type }) => {
     if (!email || !password) return;
     e.preventDefault();
     const response = await login(login_type.toLowerCase(), email, password);
+    console.log(response)
     if (response.success) {
-      if (response.userType == "student") navigate("/studentDashboard");
-      else if (response.userType == "teacher") navigate("/teacherDashboard");
-      else if (response.userType == "admin") navigate("/adminDashboard");
+      navigate(`/${login_type.toLowerCase()}/dashboard`)
     } else toast.error("Incorrect Username or Password");
   };
 
@@ -68,7 +67,7 @@ const LoginCard = ({ login_type }) => {
                     autoComplete="email"
                     required
                     className={`focus:ring-2 ${colors.focus} focus:border-transparent block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-md`}
-                    placeholder="you@example.com"
+                    placeholder="your@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
@@ -115,7 +114,7 @@ const LoginCard = ({ login_type }) => {
               <div className="flex items-center justify-between">
                 {login_type === "Admin" ? (
                   <Link
-                    to="/instituteLogin"
+                    to="/institute/login"
                     className="text-sm text-blue-600 hover:text-blue-500 hover:underline"
                   >
                     Institute Login
@@ -136,7 +135,7 @@ const LoginCard = ({ login_type }) => {
                   </div>
                 )}
                 <Link
-                  to="/resetPassword"
+                  to="/reset/password"
                   state={{ userType: login_type }}
                   className="text-sm text-blue-600 hover:text-blue-500 hover:underline"
                 >
@@ -160,7 +159,7 @@ const LoginCard = ({ login_type }) => {
             <div className="mt-6 text-center text-sm">
               <span className="text-gray-600">Don't have an account? </span>
               <Link
-                to={`/${login_type.toLowerCase()}Signup`}
+                to={login_type==="Admin"?`/institute/signup`:`/${login_type.toLowerCase()}/signup`}
                 className="font-medium text-blue-600 hover:text-blue-500 hover:underline"
               >
                 Sign up

@@ -127,7 +127,7 @@ const ResetPassword = () => {
             const response = await updatePassword(userType, email, newPassword);
             if (response.success) {
                 toast.success("Password updated successfully");
-                navigate(`/${userType.toLowerCase()}Login`);
+                navigate(`/${userType.toLowerCase()}/login`);
             } else {
                 toast.error(response.message || "Failed to update password");
             }
@@ -193,7 +193,7 @@ const ResetPassword = () => {
 
                                 <div className="flex items-center justify-between">
                                     <Link
-                                        to={`/${userType.toLowerCase()}Login`}
+                                        to={`/${userType.toLowerCase()}/login`}
                                         className="text-sm text-blue-600 hover:text-blue-500 hover:underline"
                                     >
                                         Back to Login
@@ -211,7 +211,7 @@ const ResetPassword = () => {
                                 <div className="text-center text-sm">
                                     <span className="text-gray-600">Don't have an account? </span>
                                     <Link
-                                        to={`/${userType.toLowerCase()}Signup`}
+                                        to={`/${userType.toLowerCase()}/signup`}
                                         className="font-medium text-blue-600 hover:text-blue-500 hover:underline"
                                     >
                                         Sign up

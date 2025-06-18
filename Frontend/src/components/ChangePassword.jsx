@@ -59,7 +59,7 @@ const ChangePassword = () => {
             const response = await updatePassword(userType, null, newPassword);
             if (response.success) {
                 toast.success("Password updated successfully");
-                navigate(`/${userType.toLowerCase()}Dashboard`);
+                navigate(`/${userType.toLowerCase()}/dashboard`);
             } else {
                 toast.error(response.message || "Failed to update password");
             }

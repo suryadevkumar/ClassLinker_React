@@ -74,7 +74,7 @@ const InstituteDashboard = () => {
               />
             </Link>
             <Link 
-              to="/changePassword" 
+              to="/change/password" 
               state={{ userType: "Institute" }}
               className="block"
             >

@@ -90,7 +90,7 @@ const AdminDashboard = () => {
                 color="bg-indigo-50"
               />
             </Link>
-            <Link to="/classList" className="block">
+            <Link to="/class/list" className="block">
               <DashboardCard 
                 icon={<FaUsers className="text-indigo-600 text-3xl" />}
                 title="Class Management"

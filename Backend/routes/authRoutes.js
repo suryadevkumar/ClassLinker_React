@@ -7,7 +7,7 @@ router.post('/sendOTP', sendOtp);
 router.post('/verifyOTP', verifyOtp);
 router.post('/login', loginUser);
 router.post('/updatePassword', updatePassword);
-router.get('/checkSession', checkSession);
-router.post('/auth/logout', logout);
+router.get('/check/session', checkSession);
+router.post('/logout', logout);
 
 export default router;
