@@ -85,7 +85,7 @@ export const teacherDetailsFetch = async (req, res) => {
             verified: verified
         });
     } catch (err) {
-        console.error('Error fetching admin details:', err);
+        console.error('Error fetching teacher details:', err);
         res.status(500).json({ message: 'Internal server error' });
     }
 };

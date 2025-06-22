@@ -4,7 +4,8 @@ import { logout } from "../routes/authRoutes";
 import { toast } from "react-toastify";
 
 const Header = () => {
-  const authData = localStorage.getItem("userAuthData");
+  const authDataString = localStorage.getItem("userAuthData");
+  const authData = authDataString ? JSON.parse(authDataString) : null;
   const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -20,7 +21,8 @@ const Header = () => {
     <>
       <header className="h-16 bg-gradient-to-r from-indigo-600 to-blue-500 shadow-lg fixed w-full top-0">
         <div className="container mx-auto px-4 h-full flex justify-between items-center">
-          <Link to="/" className="flex items-center h-full">
+          <Link to={authData && authData?.userType?`/${authData.userType}/dashboard`:"/"} 
+            className="flex items-center h-full">
             <img
               src={Logo}
               alt="logo"
@@ -35,28 +37,28 @@ const Header = () => {
             <ul className="flex space-x-6 h-full items-center">
               <li className="h-full flex items-center">
                 <Link
-                  to="/"
+                  to={authData ? `/${authData.userType}/dashboard`:"/"}
                   className="text-white hover:text-indigo-200 font-medium transition-colors px-3 py-2 rounded-md hover:bg-white/10 h-full flex items-center"
                 >
-                  Home
+                  {authData?"Dashboard":"Home"}
                 </Link>
               </li>
-              <li className="h-full flex items-center">
+              {!authData && <li className="h-full flex items-center">
                 <Link
-                  to="/contact"
+                  to="#"
                   className="text-white hover:text-indigo-200 font-medium transition-colors px-3 py-2 rounded-md hover:bg-white/10 h-full flex items-center"
                 >
                   Contact
                 </Link>
-              </li>
-              <li className="h-full flex items-center">
+              </li>}
+              {!authData && <li className="h-full flex items-center">
                 <Link
-                  to="/about"
+                  to="#"
                   className="text-white hover:text-indigo-200 font-medium transition-colors px-3 py-2 rounded-md hover:bg-white/10 h-full flex items-center"
                 >
                   About
                 </Link>
-              </li>
+              </li>}
               {authData && <li className="h-full flex items-center">
                 <button
                   onClick={handleLogout}

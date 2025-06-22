@@ -99,9 +99,9 @@ const StudentDashboard = () => {
             <div className="bg-indigo-600 p-4 text-white text-center">
               <h2 className="text-xl font-semibold">Student Profile</h2>
             </div>
-            <div className="p-6">
-              <div className="flex flex-col items-center mb-6">
-                <div className="w-32 h-32 rounded-full border-4 border-indigo-100 overflow-hidden mb-4">
+            <div className="px-6 py-4">
+              <div className="flex flex-col items-center mb-2">
+                <div className="w-32 h-32 rounded-full border-4 border-indigo-100 overflow-hidden mb-2">
                   <img
                     src={`data:image/jpeg;base64,${studentData.std_pic}`}
                     alt="Profile"
