@@ -7,9 +7,10 @@ import "./index.css";
 
 import { initializeSocket } from "./utils/socket.js";
 
+import Header from "./components/Header";
+import Front from "./components/Front.jsx";
 import Footer from "./components/Footer";
 import Home from "./components/Home";
-import Header from "./components/Header";
 import Error from "./components/Error";
 import LoginCard from "./components/LoginCard";
 import InstituteLogin from "./components/InstituteLogin";
@@ -45,7 +46,7 @@ const AppLayout = () => {
     <>
       <Header />
       <ToastContainer position="top-center" autoClose={3000} />
-      <Outlet />
+      <Front />
       <Footer />
     </>
   );

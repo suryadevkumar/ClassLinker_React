@@ -4,12 +4,14 @@ import { logout } from "../routes/authRoutes";
 import { toast } from "react-toastify";
 
 const Header = () => {
+  const authData = localStorage.getItem("userAuthData");
   const navigate = useNavigate();
 
     const handleLogout = async () => {
         const response = await logout();
         if(response.success){
           navigate("/");
+          localStorage.removeItem("userAuthData")
           toast.success(response.message);
         } 
     };
@@ -55,14 +57,14 @@ const Header = () => {
                   About
                 </Link>
               </li>
-              <li className="h-full flex items-center">
+              {authData && <li className="h-full flex items-center">
                 <button
                   onClick={handleLogout}
                   className="bg-white text-indigo-600 hover:bg-indigo-50 font-medium transition-colors px-4 py-2 rounded-md ml-4 h-full flex items-center"
                 >
                   LogOut
                 </button>
-              </li>
+              </li>}
             </ul>
           </nav>
 

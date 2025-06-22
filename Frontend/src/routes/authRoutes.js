@@ -61,6 +61,16 @@ export const login = async (userType, email, password) => {
                 'Content-Type': 'application/json',
             },
         });
+        if (response.data.success) {
+            const now = new Date();
+            const expiryTime = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+            const userAuthData = {
+                userType: userType,
+                expiryTime: expiryTime.toISOString()
+            };
+
+            localStorage.setItem("userAuthData", JSON.stringify(userAuthData));
+        }
         return response.data;
     } catch (error) {
         return {
