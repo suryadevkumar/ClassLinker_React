@@ -84,7 +84,7 @@ const InstituteDashboard = () => {
                 color="bg-indigo-50"
               />
             </Link>
-            <Link to="/adminDashboard" className="block">
+            <Link to="/admin/dashboard" className="block">
               <DashboardCard 
                 icon={<FaSignInAlt className="text-indigo-600 text-3xl" />}
                 title="Login as Administrator"

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FaBook, FaChalkboardTeacher, FaUniversity } from 'react-icons/fa';
+import homeImage from '../assets/img/homePage.svg'
 
 const Home = () => {
   return (
@@ -62,7 +63,7 @@ const Home = () => {
           
           <div className="relative z-10">
             <img 
-              src="https://illustrations.popsy.co/amber/digital-nomad.svg" 
+              src={homeImage} 
               alt="Education Illustration"
               className="w-full h-auto max-w-md mx-auto"
             />

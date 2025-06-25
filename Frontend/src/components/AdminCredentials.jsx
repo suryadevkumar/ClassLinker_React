@@ -163,7 +163,7 @@ const AdminCredentials = () => {
 
         if (!hasNameChange && !hasMobileChange && !hasEmailChange && !imageChanged) {
             toast.info("No changes detected");
-            navigate("/instituteDashboard");
+            navigate("/institute/dashboard");
             return;
         }
 
@@ -213,7 +213,7 @@ const AdminCredentials = () => {
 
             const response = await updateAdminDetails(formDataToSend);
             toast.success(response.message || "Credentials updated successfully");
-            navigate("/instituteDashboard");
+            navigate("/institute/dashborad");
         } catch (error) {
             toast.error("Failed to update credentials");
         } finally {
@@ -223,7 +223,7 @@ const AdminCredentials = () => {
 
     const cancelChanges = () => {
         toast.info("Changes discarded");
-        navigate("/instituteDashboard");
+        navigate("/institute/dashboard");
     };
 
     const handleInputChange = (e) => {
@@ -248,7 +248,7 @@ const AdminCredentials = () => {
                 {/* Header */}
                 <div className="flex items-center mb-8">
                     <button
-                        onClick={() => navigate("/instituteDashboard")}
+                        onClick={() => navigate("/institute/dashboard")}
                         className="mr-4 p-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors"
                     >
                         <FaArrowLeft />
