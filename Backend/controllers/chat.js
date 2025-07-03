@@ -1,5 +1,5 @@
 import db from "../config/db.js";
-import oracledb from 'oracledb';
+import oracledb from "oracledb";
 
 // Get messages for a subject
 export const getMessage = async (req, res) => {
@@ -9,11 +9,11 @@ export const getMessage = async (req, res) => {
       `SELECT * FROM chat WHERE sub_id = :sub_id ORDER BY time ASC`,
       { sub_id }
     );
-    
+
     res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching messages:', error);
-    res.status(500).json({ error: 'Failed to fetch messages' });
+    console.error("Error fetching messages:", error);
+    res.status(500).json({ error: "Failed to fetch messages" });
   }
 };
 
@@ -52,10 +52,11 @@ export const sendMessage = async (req, res) => {
     );
 
     const newMessage = result.rows[0];
-    
+
     res.json({ success: true, message: newMessage });
   } catch (error) {
-    console.error('Error sending message:', error);
-    res.status(500).json({ error: 'Failed to send message' });
+    console.error("Error sending message:", error);
+    res.status(500).json({ error: "Failed to send message" });
   }
 };
+
