@@ -202,7 +202,7 @@ const TeacherSignup = () => {
       if (result === 'Signup Successful') {
         toast.success('Signup successful. Redirecting to login...');
         setTimeout(() => {
-          window.location.href = '/teacherLogin';
+          window.location.href = '/teacher/login';
         }, 2000);
       } else {
         toast.error(result || 'Signup failed');

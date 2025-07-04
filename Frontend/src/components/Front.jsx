@@ -15,13 +15,13 @@ const routePermissions = {
         "/teacher/signup",
         "/institute/signup",
         "/reset/password",
-        "/change/password"
     ],
 
     // Routes accessible only by specific user types
     protected: {
+        "/change/password": ["institute", "admin", "teacher", "student"],
         "/institute/dashboard": ["institute"],
-        "/admin/dashboard": ["admin"],
+        "/admin/dashboard": ["institute","admin"],
         "/teacher/dashboard": ["teacher"],
         "/student/dashboard": ["student"],
         "/admin": ["institute"],

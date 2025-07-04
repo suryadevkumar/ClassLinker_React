@@ -156,7 +156,7 @@ const StudentDashboard = () => {
               color="bg-indigo-50"
             />
             <Link 
-              to="/change/password" 
+              to="/change/password"
               state={{ userType: "Student" }}
               className="block"
             >

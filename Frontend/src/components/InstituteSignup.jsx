@@ -242,7 +242,7 @@ const InstituteSignUp = () => {
       if (result.success) {
         toast.success("Signup successful! Redirecting to login...");
         setTimeout(() => {
-          navigate("/instituteLogin");
+          navigate("/institute/login");
         }, 3000);
       } else {
         toast.error(result.message || "Signup failed!");

@@ -329,7 +329,7 @@ const StudentSignup = () => {
       if (response.success) {
         toast.success("Signup successful. Redirecting to login...");
         setTimeout(() => {
-          window.location.href = "/studentLogin";
+          window.location.href = "/student/login";
         }, 3000);
       } else {
         toast.error(response.data?.message || "Signup failed");
